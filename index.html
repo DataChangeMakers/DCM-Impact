@@ -452,7 +452,7 @@ function getTypeInfo(types) {
 }
 
 function renderDashboard(rows1, rows2, rows3) {
-  const orgs = mergeOrgs(rows1.filter(r => v(r, COL.CHARITY).length > 1));
+  const orgs = mergeOrgs(rows1.filter(r => v(r, COL.CHARITY).length > 1 && !/noise solution/i.test(v(r, COL.CHARITY))));
 
   const uniqueOrgCount = new Set(orgs.map(o => o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
   document.getElementById('subtitle').textContent =
