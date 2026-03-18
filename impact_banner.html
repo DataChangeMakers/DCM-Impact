@@ -200,14 +200,22 @@ body {
 
   <!-- Panel 3: Survey -->
   <div class="panel-survey">
-    <div class="panel-title">Pre vs post confidence</div>
-    <div class="survey-tabs" id="b-tabs">
-      <button class="stab active" onclick="bShowSurvey('data',this)">Data</button>
-      <button class="stab" onclick="bShowSurvey('literacy',this)">Literacy</button>
-      <button class="stab" onclick="bShowSurvey('impact',this)">Impact</button>
-      <button class="stab" onclick="bShowSurvey('decisions',this)">Decisions</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px;flex-wrap:wrap;">
+      <div class="panel-title" id="b-panel-title">Organisation impact</div>
+      <div style="display:flex;gap:3px;">
+        <button id="b-tog-org" class="stab active" onclick="bSetPanel('org',this)" style="font-size:9px;padding:2px 6px;">Org impact</button>
+        <button id="b-tog-vol" class="stab" onclick="bSetPanel('vol',this)" style="font-size:9px;padding:2px 6px;">Vol feedback</button>
+      </div>
     </div>
-    <div class="survey-content" id="b-survey"></div>
+    <!-- Org impact view -->
+    <div id="b-panel-org">
+      <div class="survey-tabs" id="b-tabs" style="margin-bottom:6px;"></div>
+      <div class="survey-content" id="b-survey"></div>
+    </div>
+    <!-- Volunteer feedback view -->
+    <div id="b-panel-vol" style="display:none;">
+      <div class="survey-content" id="b-vol-ratings"></div>
+    </div>
   </div>
 
   <!-- Panel 4: Volunteer feedback -->
@@ -257,12 +265,13 @@ const SHEET3_TAB = 'Feedback';
 // 1:Time 2:Project 3:FirstName 4:LastName 5:Email 6:Contact
 // 7:Overall 8:CharityChoice 9:DataInstructions 10:DCMSupport 11:LiveEvent
 // 12:Enjoyed 13:Improved 14:CharityIntro
-const FB = { PROJECT:2, OVERALL:7, CHARITY:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12 };
+const FB = { PROJECT:2, OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12 };
 
 const COL = {
   CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6, STUDENTS:12, GRAND_TOTAL:14,
   PRE_DATA:15, POST_DATA:16, PRE_LITERACY:17, POST_LITERACY:18,
-  PRE_IMPACT:21, POST_IMPACT:22, PRE_DECISIONS:23, POST_DECISIONS:24,
+  PRE_TOOLS:19, POST_SUPPORT:20, PRE_IMPACT:21, POST_IMPACT:22,
+  PRE_DECISIONS:23, POST_DECISIONS:24,
   OVERALL_SAT:33, QUOTES:35,
 };
 
@@ -361,51 +370,35 @@ async function init() {
       }
     });
 
-    // Survey data
-    bSurveyData = {
-      data:      { title: 'Confident discussing data (1–5)', items: [] },
-      literacy:  { title: 'Data literacy is strong (1–5)', items: [] },
-      impact:    { title: 'Confident demonstrating impact (1–5)', items: [] },
-      decisions: { title: 'Making decisions with data (1–5)', items: [] },
-    };
-    projects.forEach(r => {
-      const org = v(r, COL.CHARITY).replace(/\s*\(.*?\)/g,'').replace(/[Cc]ollorado/g,'Colorado').trim();
-      const pd=n(r,COL.PRE_DATA)||null, qd=n(r,COL.POST_DATA)||null;
-      const pl=n(r,COL.PRE_LITERACY)||null, ql=n(r,COL.POST_LITERACY)||null;
-      const pi=n(r,COL.PRE_IMPACT)||null, qi=n(r,COL.POST_IMPACT)||null;
-      const pdc=n(r,COL.PRE_DECISIONS)||null, qdc=n(r,COL.POST_DECISIONS)||null;
-      if(pd||qd) bSurveyData.data.items.push({org, before:pd, after:qd});
-      if(pl||ql) bSurveyData.literacy.items.push({org, before:pl, after:ql});
-      if(pi||qi) bSurveyData.impact.items.push({org, before:pi, after:qi});
-      if(pdc||qdc) bSurveyData.decisions.items.push({org, before:pdc, after:qdc});
+    // Survey data — post-only averaged, categorised
+    const bPostQuestions = [
+      { key:'data',      tab:'Data',      questions:[
+        { col: COL.POST_DATA,     label: 'More confident discussing data' },
+        { col: COL.POST_SUPPORT,  label: 'DCM data support was valuable' },
+      ]},
+      { key:'literacy',  tab:'Literacy',  questions:[
+        { col: COL.POST_LITERACY, label: 'Improved data literacy' },
+      ]},
+      { key:'impact',    tab:'Impact',    questions:[
+        { col: COL.POST_IMPACT,   label: 'Increased confidence with funders' },
+      ]},
+      { key:'decisions', tab:'Decisions', questions:[
+        { col: COL.POST_DECISIONS, label: 'Better decisions using data' },
+      ]},
+    ];
+    bSurveyData = {};
+    bPostQuestions.forEach(cat => {
+      const questionsWithVals = cat.questions.map(q => {
+        const vals = [];
+        projects.forEach(r => { const val = n(r, q.col); if (val) vals.push(val); });
+        return { label: q.label, vals };
+      });
+      bSurveyData[cat.key] = { tab: cat.tab, questions: questionsWithVals };
     });
-    bShowSurvey('data', document.querySelector('.stab'));
+    bRenderOrgImpact('data');
 
     // Volunteer feedback ratings
-    const fbRows = rows3.filter(r => v(r, FB.OVERALL));
-    const fbKeys = [
-      { col: FB.OVERALL,  label: 'Overall experience' },
-      { col: FB.CHARITY,  label: 'Charity choice' },
-      { col: FB.DATA,     label: 'Data & instructions' },
-      { col: FB.SUPPORT,  label: 'DCM support' },
-      { col: FB.LIVE,     label: 'Live event format' },
-    ];
-    document.getElementById('b-fb-count').textContent = `${fbRows.length} responses`;
-    const fbHtml = fbKeys.map(({ col, label }) => {
-      const vals = fbRows.map(r => n(r, col)).filter(x => x > 0);
-      const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
-      const rounded = Math.round(avg * 10) / 10;
-      const fullStars = Math.round(avg);
-      const stars = Array.from({length:5}, (_,i) =>
-        `<span class="fb-star" style="color:${i < fullStars ? '#EF9F27' : '#d3d1c7'}">★</span>`
-      ).join('');
-      return `<div class="fb-row">
-        <div class="fb-row-label">${label}</div>
-        <div class="fb-stars">${stars}</div>
-        <div class="fb-score">${rounded}/5</div>
-      </div>`;
-    }).join('');
-    document.getElementById('b-fb-ratings').innerHTML = fbHtml;
+    bRenderVolFeedback(rows3);
 
     // Pick a recent enjoyed comment for the panel
     const enjoyedComments = fbRows.map(r => v(r, FB.ENJOYED)).filter(t => t.length > 20);
@@ -435,28 +428,89 @@ async function init() {
   }
 }
 
-function bShowSurvey(key, btn) {
-  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+function bSetPanel(panel, btn) {
+  document.querySelectorAll('#b-tog-org, #b-tog-vol').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const d = bSurveyData[key];
-  if (!d) return;
-  const el = document.getElementById('b-survey');
-  if (!d.items.length) { el.innerHTML = `<div style="font-size:11px;color:#b4b2a9;padding-top:6px;">No data yet.</div>`; return; }
-  el.innerHTML = d.items.map(item => `
-    <div class="sbar-group">
-      <div class="sbar-org">${item.org}</div>
-      ${item.before !== null ? `<div class="sbar-row">
-        <div class="sbar-label">Before</div>
-        <div class="sbar-track"><div class="sbar-fill" style="width:${item.before/5*100}%;background:#b4b2a9;"></div></div>
-        <div class="sbar-val">${item.before}/5</div>
-      </div>` : ''}
-      ${item.after !== null ? `<div class="sbar-row">
-        <div class="sbar-label">After</div>
-        <div class="sbar-track"><div class="sbar-fill" style="width:${item.after/5*100}%;background:#1D9E75;"></div></div>
-        <div class="sbar-val">${item.after}/5</div>
-      </div>` : ''}
-    </div>`).join('');
+  document.getElementById('b-panel-org').style.display = panel === 'org' ? 'block' : 'none';
+  document.getElementById('b-panel-vol').style.display = panel === 'vol' ? 'block' : 'none';
+  document.getElementById('b-panel-title').textContent = panel === 'org' ? 'Organisation impact' : 'Volunteer feedback';
 }
+
+function bMakeStars(val, color) {
+  const full = Math.round(val);
+  return Array.from({length:5}, (_,i) =>
+    `<span style="font-size:12px;color:${i<full?color:'#d3d1c7'}">★</span>`
+  ).join('');
+}
+
+function bRenderOrgImpact(activeKey) {
+  const keys = Object.keys(bSurveyData);
+  const key = activeKey || keys[0];
+  const tabsEl = document.getElementById('b-tabs');
+  if (!tabsEl) return;
+
+  // Render tabs
+  tabsEl.innerHTML = keys.map(k =>
+    `<button class="stab ${k===key?'active':''}" onclick="bRenderOrgImpact('${k}')">${bSurveyData[k].tab}</button>`
+  ).join('');
+
+  const cat = bSurveyData[key];
+  const el = document.getElementById('b-survey');
+  if (!cat || !cat.questions.some(q => q.vals.length > 0)) {
+    el.innerHTML = '<div style="font-size:11px;color:#b4b2a9;padding-top:6px;">No post-project survey data yet.</div>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:10px;color:#b4b2a9;margin-bottom:8px;">Average post-project scores (1–5)</div>' +
+    cat.questions.map(q => {
+      if (!q.vals.length) return '';
+      const avg = q.vals.reduce((a,b)=>a+b,0)/q.vals.length;
+      const rounded = Math.round(avg*10)/10;
+      const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
+      return `<div style="margin-bottom:8px;">
+        <div style="font-size:10px;color:#888780;margin-bottom:3px;line-height:1.3;">${q.label}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div>${bMakeStars(avg,'#1d9e75')}</div>
+          <div style="font-size:11px;font-weight:600;color:#1d9e75;">${display}/5</div>
+          <div style="font-size:9px;color:#b4b2a9;">(${q.vals.length})</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function bRenderVolFeedback(rows3) {
+  const fbRows = (rows3 || []).filter(r => {
+    const val = rows3 && r[FB.OVERALL-1] ? parseFloat(String(r[FB.OVERALL-1]).replace(/[$,]/g,'')) : 0;
+    return val > 0;
+  });
+  const el = document.getElementById('b-vol-ratings');
+  if (!el) return;
+  if (!fbRows.length) { el.innerHTML = '<div style="font-size:11px;color:#b4b2a9;padding-top:6px;">No feedback yet.</div>'; return; }
+
+  const ratingKeys = [
+    { col: FB.OVERALL,   label: 'Overall experience' },
+    { col: FB.CHARITY_Q, label: 'Charity choice' },
+    { col: FB.DATA,      label: 'Data & instructions' },
+    { col: FB.SUPPORT,   label: 'DCM support' },
+    { col: FB.LIVE,      label: 'Live event format' },
+  ];
+  const vb = (row, col) => row[col-1] !== undefined ? String(row[col-1]).trim() : '';
+  const nb = (row, col) => { const v = parseFloat(vb(row,col).replace(/[$,]/g,'')); return isNaN(v)?null:v; };
+
+  el.innerHTML = `<div style="font-size:10px;color:#b4b2a9;margin-bottom:8px;">${fbRows.length} responses</div>` +
+    ratingKeys.map(({ col, label }) => {
+      const vals = fbRows.map(r => nb(r,col)).filter(x => x > 0);
+      const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+      const rounded = Math.round(avg*10)/10;
+      const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
+      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <div style="font-size:10px;color:#888780;width:100px;flex-shrink:0;">${label}</div>
+        <div>${bMakeStars(avg,'#ef9f27')}</div>
+        <div style="font-size:11px;font-weight:600;color:#ef9f27;">${display}/5</div>
+      </div>`;
+    }).join('');
+}
+
+function bShowSurvey(key, btn) { bRenderOrgImpact(key); }
 
 function renderQuote(idx) {
   const q = bQuotes[idx];
