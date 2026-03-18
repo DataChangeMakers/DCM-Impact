@@ -30,7 +30,7 @@ body {
   border: 1px solid rgba(0,0,0,0.07);
   overflow: hidden;
   display: grid;
-  grid-template-columns: 160px 1fr 1fr 1fr 1fr 200px;
+  grid-template-columns: 160px 1fr 1fr 1fr 220px;
   grid-template-rows: 1fr;
 }
 
@@ -209,17 +209,6 @@ body {
   <div class="panel-survey">
     <div class="panel-title" style="margin-bottom:8px;">Volunteer feedback</div>
     <div class="survey-content" id="b-vol-ratings"></div>
-  </div>
-
-  <!-- Panel 4: Volunteer feedback -->
-  <div class="panel-feedback">
-    <div class="panel-title">Volunteer feedback</div>
-    <div class="panel-sub" id="b-fb-count">—</div>
-    <div class="fb-ratings" id="b-fb-ratings"></div>
-    <div class="fb-enjoy-wrap">
-      <div class="fb-enjoy-label">What volunteers enjoyed</div>
-      <div class="fb-enjoy-text" id="b-fb-enjoy"></div>
-    </div>
   </div>
 
   <!-- Panel 5: Quote rotator -->
@@ -415,7 +404,7 @@ async function init() {
 }
 
 function bMakeStars(val, color) {
-  const full = Math.round(val);
+  const full = Math.floor(val);
   return Array.from({length:5}, (_,i) =>
     `<span style="font-size:12px;color:${i<full?color:'#d3d1c7'}">★</span>`
   ).join('');
