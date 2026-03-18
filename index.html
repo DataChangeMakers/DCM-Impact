@@ -416,30 +416,7 @@ async function loadAll() {
     const volMap   = buildColMap(s2.header, VOL_COLS);
     const fbMap    = buildColMap(s3.header, FB_COLS);
 
-    // Debug: log what we found
-    dlog('=== Sheet 1 headers ===', 'dim');
-    s1.header.forEach((h,i) => dlog(`  [${i}] ${h}`, 'dim'));
-    dlog('');
-    dlog('=== Sheet 1 column map ===', '');
-    for (const [k,i] of Object.entries(colMap1)) {
-      const found = i >= 0;
-      dlog(`  ${k}: col ${i} ${found ? '"'+s1.header[i]+'"' : '⚠ NOT FOUND'}`, found?'':'warn');
-    }
-    dlog('');
-    dlog('=== Survey data sample (first 3 data rows) ===', 'dim');
-    s1.rows.slice(0,3).forEach((row,ri) => {
-      dlog(`  Row ${ri+1}: charity="${cellAt(row,colMap1.CHARITY)}" overall_sat="${numAt(row,colMap1.OVERALL_SAT)}" post_data="${numAt(row,colMap1.POST_DATA)}"`, 'dim');
-    });
-    dlog('');
-    dlog('=== Sheet 3 (Feedback) headers ===', 'dim');
-    s3.header.forEach((h,i) => dlog(`  [${i}] ${h}`, 'dim'));
-    dlog('');
-    dlog('=== Feedback col map ===', '');
-    for (const [k,i] of Object.entries(fbMap)) {
-      const found = i >= 0;
-      dlog(`  ${k}: col ${i} ${found ? '"'+s3.header[i]+'"' : '⚠ NOT FOUND'}`, found?'':'warn');
-    }
-    flushDebug();
+
 
     renderDashboard(s1, s2, s3, colMap1, volMap, fbMap);
     dot.classList.add('live'); label.textContent='Refresh data';
@@ -459,7 +436,10 @@ async function loadAll() {
 
 // ── Render ──────────────────────────────────────────────────────────────────
 function renderDashboard(s1, s2, s3, C, V, FB) {
-  const rows1 = s1.rows.filter(r => cellAt(r, C.CHARITY).length > 1);
+  const rows1 = s1.rows.filter(r => {
+    const charity = cellAt(r, C.CHARITY);
+    return charity.length > 1 && !charity.toLowerCase().includes('noise solution');
+  });
 
   // Build org entries (one per row)
   const orgs = rows1.map(row => {
@@ -554,12 +534,11 @@ function renderDashboard(s1, s2, s3, C, V, FB) {
         const val = numAt(o.row, q.idx);
         if (val) vals.push(val);
       });
-      dlog(`  survey "${cat.key}" / "${q.label.slice(0,30)}" — col ${q.idx}, ${vals.length} values: [${vals.join(', ')}]`, vals.length?'':'warn');
+
       return { label: q.label, vals };
     });
     surveyData[cat.key] = { tab: cat.tab, questions };
   });
-  flushDebug();
   renderOrgImpact('data');
 
   // Quotes
