@@ -30,7 +30,7 @@ body {
   border: 1px solid rgba(0,0,0,0.07);
   overflow: hidden;
   display: grid;
-  grid-template-columns: 180px 1fr 1fr 1fr 240px;
+  grid-template-columns: 160px 1fr 1fr 1fr 1fr 200px;
   grid-template-rows: 1fr;
 }
 
@@ -198,24 +198,17 @@ body {
     </div>
   </div>
 
-  <!-- Panel 3: Survey -->
+  <!-- Panel 3: Organisation impact -->
   <div class="panel-survey">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px;flex-wrap:wrap;">
-      <div class="panel-title" id="b-panel-title">Organisation impact</div>
-      <div style="display:flex;gap:3px;">
-        <button id="b-tog-org" class="stab active" onclick="bSetPanel('org',this)" style="font-size:9px;padding:2px 6px;">Org impact</button>
-        <button id="b-tog-vol" class="stab" onclick="bSetPanel('vol',this)" style="font-size:9px;padding:2px 6px;">Vol feedback</button>
-      </div>
-    </div>
-    <!-- Org impact view -->
-    <div id="b-panel-org">
-      <div class="survey-tabs" id="b-tabs" style="margin-bottom:6px;"></div>
-      <div class="survey-content" id="b-survey"></div>
-    </div>
-    <!-- Volunteer feedback view -->
-    <div id="b-panel-vol" style="display:none;">
-      <div class="survey-content" id="b-vol-ratings"></div>
-    </div>
+    <div class="panel-title" style="margin-bottom:8px;">Organisation impact</div>
+    <div class="survey-tabs" id="b-tabs" style="margin-bottom:6px;"></div>
+    <div class="survey-content" id="b-survey"></div>
+  </div>
+
+  <!-- Panel 4: Volunteer feedback -->
+  <div class="panel-survey">
+    <div class="panel-title" style="margin-bottom:8px;">Volunteer feedback</div>
+    <div class="survey-content" id="b-vol-ratings"></div>
   </div>
 
   <!-- Panel 4: Volunteer feedback -->
@@ -419,14 +412,6 @@ async function init() {
   } catch(err) {
     document.getElementById('loading').innerHTML = `<span style="color:#993c1d;">Failed to load: ${err.message}</span>`;
   }
-}
-
-function bSetPanel(panel, btn) {
-  document.querySelectorAll('#b-tog-org, #b-tog-vol').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  document.getElementById('b-panel-org').style.display = panel === 'org' ? 'block' : 'none';
-  document.getElementById('b-panel-vol').style.display = panel === 'vol' ? 'block' : 'none';
-  document.getElementById('b-panel-title').textContent = panel === 'org' ? 'Organisation impact' : 'Volunteer feedback';
 }
 
 function bMakeStars(val, color) {
