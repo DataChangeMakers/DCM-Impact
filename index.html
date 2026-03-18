@@ -195,6 +195,7 @@ const COL = {
   PRE_TOOLS:19,     POST_SUPPORT:20,
   PRE_IMPACT:21,    POST_IMPACT:22,
   PRE_DECISIONS:23, POST_DECISIONS:24,
+  // cols 25 onwards — can you share a screenshot of your header row from col Y onwards?
   POST_DCM_QUALITY:26, POST_PARTNER_AGAIN:27,
   POST_PROGRAMS:29, POST_MEASURE:30,
   OVERALL_SAT:32,   LIKELY_RECOMMEND:33, QUOTES:34,
@@ -483,6 +484,7 @@ function renderDashboard(rows1, rows2, rows3) {
       {col:COL.LIKELY_RECOMMEND,   label:'Likely to recommend DCM to another nonprofit'},
     ]},
   };
+
 
   // Populate vals for each question by iterating all org survey rows
   Object.values(surveyData).forEach(cat => {
