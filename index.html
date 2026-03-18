@@ -240,28 +240,28 @@ const SHEET3_TAB= 'Feedback';
 // ── Survey column name fragments to search for (case-insensitive substring match)
 // We'll detect actual column indices from the header row of Sheet 1
 const SURVEY_COLS = {
-  POST_DATA:        'more confident discussing',
-  POST_SUPPORT:     'data support from dcm',
-  POST_LITERACY:    'data literacy',
-  POST_IMPACT:      'demonstrating impact',
-  POST_DECISIONS:   'better decisions',
-  POST_DCM_QUALITY: 'quality of dcm',
-  POST_PARTNER_AGAIN:'partner with data change',
-  POST_PROGRAMS:    'deliver better programs',
-  POST_MEASURE:     'measure and share',
-  OVERALL_SAT:      'overall satisfaction',
-  LIKELY_RECOMMEND: 'recommend',
-  QUOTES:           'quote',
+  POST_DATA:         'after the project, our organization feels more confident discussing',
+  POST_SUPPORT:      'data support (e.g., dashboards',
+  POST_LITERACY:     'helped improve our team',
+  POST_IMPACT:       'project increased our confidence in demonstrating impact',
+  POST_DECISIONS:    'helped our organization make better decisions',
+  POST_DCM_QUALITY:  'satisfied with the quality of data changemakers',
+  POST_PARTNER_AGAIN:'likely are you to partner with data changemakers',
+  POST_PROGRAMS:     'deliver better programs',
+  POST_MEASURE:      'measure and share the results',
+  OVERALL_SAT:       'overall, how satisfied were you with the project',
+  LIKELY_RECOMMEND:  'likely are you to recommend data changemakers',
+  QUOTES:            'quotes',
 };
 
 // Fixed columns (Sheet 1) — robust to minor header changes
 const FIXED_COLS = {
-  CHARITY:     'charity',
+  CHARITY:     'charity name',
   TYPE:        'project type',
-  VOLS:        'volunteer',  // matches "Volunteers" or "Number of Volunteers"
-  HOURS:       'hours spent',
-  GRAND_TOTAL: 'grand total',
-  STUDENTS:    'student',
+  VOLS:        '# volunteers (project)',
+  HOURS:       '# hours spent (project)',
+  GRAND_TOTAL: 'grand total hours',
+  STUDENTS:    '# of students',
 };
 
 // Feedback sheet (Sheet 3) fixed column names
