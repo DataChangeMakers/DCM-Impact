@@ -341,28 +341,46 @@ function renderOrgImpact(activeKey) {
   ).join('');
   const cat = surveyData[key];
   if (!cat) return;
-  if (!cat.questions.some(q=>q.vals.length>0)) {
+  if (!cat.questions.some(q=>q.postVals.length>0)) {
     container.innerHTML='<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No post-project survey data yet for this category.</div>';
     return;
   }
-  let html='<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Average post-project scores (1–5)</div>';
-  cat.questions.forEach(q=>{
-    if (!q.vals.length) {
-      html+=`<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888780;margin-bottom:4px;line-height:1.4;">${q.label}</div><div style="font-size:11px;color:#d3d1c7;">No data yet</div></div>`;
-      return;
+
+  function scoreBlock(vals, color) {
+    const a = vals.reduce((x,y)=>x+y,0)/vals.length;
+    const disp = (Math.round(a*10)/10)%1===0 ? Math.round(a) : (Math.round(a*10)/10).toFixed(1);
+    const stars = Array.from({length:5},(_,i)=>`<span style="font-size:13px;color:${i<Math.round(a)?color:'#d3d1c7'}">★</span>`).join('');
+    return `<div style="display:flex;align-items:center;gap:6px;">
+      <div>${stars}</div>
+      <div style="font-size:12px;font-weight:500;color:${color};">${disp}/5</div>
+      <div style="font-size:11px;color:#b4b2a9;">(${vals.length})</div>
+    </div>`;
+  }
+
+  let html = '';
+  cat.questions.forEach(q => {
+    if (!q.postVals.length) return;
+    const hasPre = q.preVals && q.preVals.length > 0;
+    html += `<div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:#888780;margin-bottom:6px;line-height:1.4;">${q.label}</div>`;
+    if (hasPre) {
+      html += `<div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:10px;color:#b4b2a9;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em;">Before</div>
+          ${scoreBlock(q.preVals,'#b4b2a9')}
+        </div>
+        <div style="display:flex;align-items:center;color:#d3d1c7;font-size:14px;">→</div>
+        <div>
+          <div style="font-size:10px;color:#1d9e75;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em;">After</div>
+          ${scoreBlock(q.postVals,'#1d9e75')}
+        </div>
+      </div>`;
+    } else {
+      html += scoreBlock(q.postVals,'#1d9e75');
     }
-    const a=q.vals.reduce((x,y)=>x+y,0)/q.vals.length;
-    const disp=(Math.round(a*10)/10)%1===0?Math.round(a):(Math.round(a*10)/10).toFixed(1);
-    const stars=Array.from({length:5},(_,i)=>`<span style="font-size:14px;color:${i<Math.round(a)?'#1d9e75':'#d3d1c7'}">★</span>`).join('');
-    html+=`<div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div>${stars}</div>
-        <div style="font-size:12px;font-weight:500;color:#1d9e75;">${disp}/5</div>
-        <div style="font-size:11px;color:#b4b2a9;">(${q.vals.length} response${q.vals.length>1?'s':''})</div>
-      </div></div>`;
+    html += '</div>';
   });
-  container.innerHTML=html;
+  container.innerHTML = html || '<div style="font-size:12px;color:#b4b2a9;">No data yet.</div>';
 }
 
 function renderInlineFeedback(rows3) {
@@ -463,38 +481,38 @@ function renderDashboard(rows1, rows2, rows3) {
   // Build survey data using corrected COL indices
   surveyData = {
     data: { tab:'Data', questions:[
-      {col:COL.POST_DATA,    label:'More confident discussing and using data internally'},
-      {col:COL.POST_SUPPORT, label:'Data support from DCM was valuable'},
+      {preCol:COL.PRE_DATA,    postCol:COL.POST_DATA,    label:'Confident discussing and using data internally'},
+      {preCol:null,            postCol:COL.POST_SUPPORT,  label:'Data support from DCM was valuable'},
     ]},
     literacy: { tab:'Literacy', questions:[
-      {col:COL.POST_LITERACY, label:'Helped improve team data literacy and confidence'},
+      {preCol:COL.PRE_LITERACY, postCol:COL.POST_LITERACY, label:'Overall data literacy is strong'},
     ]},
     impact: { tab:'Impact', questions:[
-      {col:COL.POST_IMPACT,   label:'Increased confidence demonstrating impact to funders'},
-      {col:COL.POST_PROGRAMS, label:'Dashboards improved ability to deliver better programs'},
-      {col:COL.POST_MEASURE,  label:'Better able to measure and share results with stakeholders'},
+      {preCol:COL.PRE_IMPACT,   postCol:COL.POST_IMPACT,   label:'Confident demonstrating impact to funders'},
+      {preCol:null,             postCol:COL.POST_PROGRAMS,  label:'Dashboards improved ability to deliver better programs'},
+      {preCol:null,             postCol:COL.POST_MEASURE,   label:'Better able to measure and share results'},
     ]},
     decisions: { tab:'Decisions', questions:[
-      {col:COL.POST_DECISIONS, label:'Project helped make better decisions using data'},
+      {preCol:COL.PRE_DECISIONS, postCol:COL.POST_DECISIONS, label:'Making decisions based on data'},
     ]},
     dcm: { tab:'DCM', questions:[
-      {col:COL.POST_DCM_QUALITY,   label:'Satisfied with quality of DCM support and contributions'},
-      {col:COL.POST_PARTNER_AGAIN, label:'Likely to partner with Data ChangeMakers again'},
-      {col:COL.OVERALL_SAT,        label:'Overall satisfaction with the project'},
-      {col:COL.LIKELY_RECOMMEND,   label:'Likely to recommend DCM to another nonprofit'},
+      {preCol:null, postCol:COL.POST_DCM_QUALITY,   label:'Satisfied with quality of DCM support'},
+      {preCol:null, postCol:COL.POST_PARTNER_AGAIN, label:'Likely to partner with Data ChangeMakers again'},
+      {preCol:null, postCol:COL.OVERALL_SAT,        label:'Overall satisfaction with the project'},
+      {preCol:null, postCol:COL.LIKELY_RECOMMEND,   label:'Likely to recommend DCM to another nonprofit'},
     ]},
   };
 
 
-  // Populate vals for each question by iterating all org survey rows
+  // Populate preVals and postVals for each question
   Object.values(surveyData).forEach(cat => {
     cat.questions = cat.questions.map(q => {
-      const vals = [];
+      const preVals = [], postVals = [];
       orgs.forEach(org => org.surveyRows.forEach(row => {
-        const val = n(row, q.col);
-        if (val !== null) vals.push(val);
+        if (q.preCol)  { const val=n(row,q.preCol);  if (val!==null) preVals.push(val); }
+        if (q.postCol) { const val=n(row,q.postCol); if (val!==null) postVals.push(val); }
       }));
-      return { label:q.label, vals };
+      return { label:q.label, preVals, postVals };
     });
   });
 
