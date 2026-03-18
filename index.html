@@ -71,7 +71,6 @@
   .badge-advanced { background: #e1f5ee; color: #0f6e56; }
   .stars { color: #ef9f27; font-size: 12px; }
 
-  /* Volunteer section */
   .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .vol-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
   .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -85,7 +84,6 @@
   .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
   .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
 
-  /* Volunteer feedback */
   .fb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .fb-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
   .fb-rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -153,18 +151,14 @@
           </div>
         </div>
 
-        <!-- Org survey view -->
         <div id="panel-org">
           <div class="tabs" id="survey-tabs" style="margin-bottom:10px;"></div>
           <div id="survey-data" class="survey-section"></div>
         </div>
 
-        <!-- Volunteer feedback view -->
         <div id="panel-vol" style="display:none;">
           <div id="inline-fb-ratings" style="padding-top:4px;"></div>
         </div>
-
-
       </div>
     </div>
 
@@ -187,7 +181,6 @@
       </table>
     </div>
 
-    <!-- VOLUNTEER SECTION -->
     <div class="section-label">Our volunteers</div>
     <div class="vol-stat-row" id="vol-stat-row"></div>
 
@@ -255,18 +248,13 @@ const SHEET2_ID    = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
 const SHEET2_TAB   = 'All Submissions';
 const SHEET3_ID    = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
 const SHEET3_TAB   = 'Feedback';
-// Feedback columns: 1:Time 2:Project 3:First 4:Last 5:Email 6:Contact
-// 7:Overall 8:CharityChoice 9:DataInstructions 10:DCMSupport 11:LiveEvent
-// 12:Enjoyed 13:Improved
+
+// Organisation names to exclude (case-insensitive, partial match)
+const EXCLUDED_ORGS = ['noise solution'];
+
 const FB = { PROJECT:2, FNAME:3, LNAME:4, OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12, IMPROVED:13 };
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Sheet 1 column indices (1-based)
-// A=1 Project ID, B=2 Date, C=3 Charity Name, D=4 Project Type,
-// E=5 Volunteers, F=6 Hours spent, G=7 Support hours, H=8 $ consulting,
-// I=9 Vols post, J=10 Hours post, K=11 Products, L=12 Students,
-// M=13 Indirect hours, N=14 Grand total hours spent
-// O onwards = survey columns
 const COL = {
   PROJECT_ID:1, DATE:2, CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6,
   HOURS_SUPPORT:7, STUDENTS:12, GRAND_TOTAL:14,
@@ -278,10 +266,6 @@ const COL = {
   OVERALL_SAT:33, LIKELY_RECOMMEND:34, QUOTES:35,
 };
 
-// Sheet 2 column indices (1-based) — based on headers provided
-// Submission ID, Project ID, Date, Charity Name, First name, Last name, Email,
-// Project Type, Data skill level?, Country, City, Hours spent,
-// First time entering?, Tool used?, Link, Screenshot, Charity Country, Topic, Selected to Present
 const VOL = {
   CHARITY:4, PROJECT_TYPE:8, SKILL:9, COUNTRY:10, CITY:11,
   HOURS:12, FIRST_TIME:13, TOOL:14,
@@ -292,6 +276,11 @@ let surveyData = {};
 
 function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
 function n(row, col) { const val = parseFloat(v(row, col).replace(/[$,]/g, "")); return isNaN(val) ? null : val; }
+
+function isExcluded(orgName) {
+  const lower = orgName.toLowerCase();
+  return EXCLUDED_ORGS.some(ex => lower.includes(ex));
+}
 
 function sheetURL(id, tab) {
   return `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
@@ -353,7 +342,6 @@ function renderCitiesMap(topCities) {
       iconSize:[size,size], iconAnchor:[size/2,size/2],
     });
 
-    // Build volunteer list sorted by submission count desc
     const country = data ? data.country : '';
     const volEntries = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]) : [];
     const volRows_html = volEntries.map(([name, subs]) =>
@@ -417,7 +405,6 @@ async function loadAll() {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 
 function countBy(arr) {
@@ -437,28 +424,32 @@ function destroyChart(id) {
 }
 
 function mergeOrgs(rows) {
-  // Each project row becomes its own entry; No Kill Colorado kept as separate rows
-  return rows.map(row => {
-    const raw = v(row, COL.CHARITY).replace(/[Cc]ollorado/g, 'Colorado').trim();
-    const type = v(row, COL.TYPE).toLowerCase();
-    const rowHours = n(row, COL.GRAND_TOTAL) || n(row, COL.HOURS_PROJECT) || 0;
-    const sat = n(row, COL.OVERALL_SAT);
-    const rec = n(row, COL.LIKELY_RECOMMEND);
-    const q = v(row, COL.QUOTES);
-    const isViz = type.includes('visuali');
-    return {
-      name: raw,
-      types: new Set([type]),
-      vols: n(row, COL.VOLS_PROJECT) || 0,
-      hours: rowHours,
-      vizHours: isViz ? rowHours : 0,
-      students: n(row, COL.STUDENTS) || 0,
-      sat: sat ? [sat] : [],
-      recommend: rec ? [rec] : [],
-      quotes: q ? [{ text: q, org: raw }] : [],
-      surveyRows: [row],
-    };
-  }).filter(o => o.name);
+  return rows
+    .filter(row => {
+      const name = v(row, COL.CHARITY).replace(/[Cc]ollorado/g, 'Colorado').trim();
+      return name.length > 1 && !isExcluded(name);
+    })
+    .map(row => {
+      const raw = v(row, COL.CHARITY).replace(/[Cc]ollorado/g, 'Colorado').trim();
+      const type = v(row, COL.TYPE).toLowerCase();
+      const rowHours = n(row, COL.GRAND_TOTAL) || n(row, COL.HOURS_PROJECT) || 0;
+      const sat = n(row, COL.OVERALL_SAT);
+      const rec = n(row, COL.LIKELY_RECOMMEND);
+      const q = v(row, COL.QUOTES);
+      const isViz = type.includes('visuali');
+      return {
+        name: raw,
+        types: new Set([type]),
+        vols: n(row, COL.VOLS_PROJECT) || 0,
+        hours: rowHours,
+        vizHours: isViz ? rowHours : 0,
+        students: n(row, COL.STUDENTS) || 0,
+        sat: sat ? [sat] : [],
+        recommend: rec ? [rec] : [],
+        quotes: q ? [{ text: q, org: raw }] : [],
+        surveyRows: [row],
+      };
+    });
 }
 
 function getTypeInfo(types) {
@@ -472,25 +463,23 @@ function getTypeInfo(types) {
   return { label: t || '—', badge: 'badge-viz' };
 }
 
-// ── Main render ───────────────────────────────────────────────────────────────
 function renderDashboard(rows1, rows2, rows3) {
-  const orgs = mergeOrgs(rows1.filter(r => v(r, COL.CHARITY).length > 1));
+  const orgs = mergeOrgs(rows1);
 
-  // Subtitle
+  // Also filter volunteer submissions linked to excluded orgs
+  const filteredRows2 = rows2.filter(r => !isExcluded(v(r, VOL.CHARITY)));
+
   const uniqueOrgCount = new Set(orgs.map(o => o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
   document.getElementById('subtitle').textContent =
-    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${rows2.length} volunteer submissions`;
+    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${filteredRows2.length} volunteer submissions`;
 
-  // ── Key metrics ──────────────────────────────────────────────────────────
   const totalHours = orgs.reduce((s,o)=>s+o.hours,0);
   const totalVols  = orgs.reduce((s,o)=>s+o.vols,0);
   const totalStudents = orgs.reduce((s,o)=>s+o.students,0);
   const allSat = orgs.flatMap(o=>o.sat);
   const avgSat = avg(allSat);
-  const totalSubmissions = rows2.length;
   const avgHoursPerProject = orgs.length ? Math.round(totalHours / orgs.length) : 0;
 
-  // Volunteer overall experience average from feedback sheet
   const fbAllRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
   const fbOverallVals = fbAllRows.map(r => n(r, FB.OVERALL)).filter(x => x > 0);
   const volOverallAvg = fbOverallVals.length
@@ -518,7 +507,6 @@ function renderDashboard(rows1, rows2, rows3) {
       <div class="metric-value">${avgHoursPerProject}</div>
       <div class="metric-sub">volunteer hours avg</div>
     </div>
-
     ${avgSat ? `<div class="metric">
       <div class="metric-label">Organisation feedback</div>
       <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -537,7 +525,6 @@ function renderDashboard(rows1, rows2, rows3) {
     </div>` : ''}
   `;
 
-  // ── Hours chart ──────────────────────────────────────────────────────────
   const vizOrgs = orgs.filter(o=>o.vizHours>0);
   destroyChart('hours');
   charts.hours = new Chart(document.getElementById('hoursChart'), {
@@ -556,49 +543,28 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // ── Survey (post-project averaged) ──────────────────────────────────────
   const surveyCategories = [
-    {
-      key: 'data',
-      tab: 'Data',
-      questions: [
-        { col: COL.POST_DATA,     label: 'More confident discussing and using data internally' },
-        { col: COL.POST_SUPPORT,  label: 'Data support from DCM was valuable' },
-      ]
-    },
-    {
-      key: 'literacy',
-      tab: 'Literacy',
-      questions: [
-        { col: COL.POST_LITERACY, label: 'Improved data literacy and confidence with data' },
-      ]
-    },
-    {
-      key: 'impact',
-      tab: 'Impact',
-      questions: [
-        { col: COL.POST_IMPACT,   label: 'Increased confidence demonstrating impact to funders' },
-        { col: COL.POST_PROGRAMS, label: 'Dashboards improved ability to deliver better programs' },
-        { col: COL.POST_MEASURE,  label: 'Better able to measure and share results with stakeholders' },
-      ]
-    },
-    {
-      key: 'decisions',
-      tab: 'Decisions',
-      questions: [
-        { col: COL.POST_DECISIONS, label: 'Better decisions using data' },
-      ]
-    },
-    {
-      key: 'dcm',
-      tab: 'DCM',
-      questions: [
-        { col: COL.POST_DCM_QUALITY,    label: 'Satisfied with quality of DCM support and contributions' },
-        { col: COL.POST_PARTNER_AGAIN,  label: 'Likely to partner with Data ChangeMakers again' },
-        { col: COL.OVERALL_SAT,         label: 'Overall satisfaction with the project' },
-        { col: COL.LIKELY_RECOMMEND,    label: 'Likely to recommend DCM to another nonprofit' },
-      ]
-    },
+    { key:'data', tab:'Data', questions:[
+      { col:COL.POST_DATA,    label:'More confident discussing and using data internally' },
+      { col:COL.POST_SUPPORT, label:'Data support from DCM was valuable' },
+    ]},
+    { key:'literacy', tab:'Literacy', questions:[
+      { col:COL.POST_LITERACY, label:'Improved data literacy and confidence with data' },
+    ]},
+    { key:'impact', tab:'Impact', questions:[
+      { col:COL.POST_IMPACT,   label:'Increased confidence demonstrating impact to funders' },
+      { col:COL.POST_PROGRAMS, label:'Dashboards improved ability to deliver better programs' },
+      { col:COL.POST_MEASURE,  label:'Better able to measure and share results with stakeholders' },
+    ]},
+    { key:'decisions', tab:'Decisions', questions:[
+      { col:COL.POST_DECISIONS, label:'Better decisions using data' },
+    ]},
+    { key:'dcm', tab:'DCM', questions:[
+      { col:COL.POST_DCM_QUALITY,   label:'Satisfied with quality of DCM support and contributions' },
+      { col:COL.POST_PARTNER_AGAIN, label:'Likely to partner with Data ChangeMakers again' },
+      { col:COL.OVERALL_SAT,        label:'Overall satisfaction with the project' },
+      { col:COL.LIKELY_RECOMMEND,   label:'Likely to recommend DCM to another nonprofit' },
+    ]},
   ];
 
   surveyData = {};
@@ -617,7 +583,6 @@ function renderDashboard(rows1, rows2, rows3) {
   });
   renderOrgImpact('data');
 
-  // ── Quotes ───────────────────────────────────────────────────────────────
   const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
   document.getElementById('quotes-grid').innerHTML = allQuotes.map(q => {
     const sentences = q.text.split(/[.!?][""]?\s+/);
@@ -630,14 +595,8 @@ function renderDashboard(rows1, rows2, rows3) {
     </div>`;
   }).join('');
 
-  // ── Org table ────────────────────────────────────────────────────────────
   document.getElementById('proj-tbody').innerHTML = orgs.map(o => {
     const {label,badge} = getTypeInfo(o.types);
-    const satAvg = avg(o.sat);
-    const recAvg = avg(o.recommend);
-    const satStr = satAvg
-      ? '★'.repeat(Math.round(satAvg))+'<span style="color:#d3d1c7">'+'★'.repeat(5-Math.round(satAvg))+'</span>'
-      : '<span style="color:#d3d1c7">—</span>';
     return `<tr>
       <td style="font-weight:500;">${o.name}</td>
       <td><span class="badge ${badge}">${label}</span></td>
@@ -647,10 +606,8 @@ function renderDashboard(rows1, rows2, rows3) {
     </tr>`;
   }).join('');
 
-  // ════════════════════════════════════════════════════════════════════════
-  // VOLUNTEER SECTION — Sheet 2
-  // ════════════════════════════════════════════════════════════════════════
-  const volRows = rows2.filter(r => v(r, VOL.SKILL) || v(r, VOL.COUNTRY) || v(r, VOL.TOOL));
+  // ── Volunteer section — use filtered rows ──────────────────────────────────
+  const volRows = filteredRows2.filter(r => v(r, VOL.SKILL) || v(r, VOL.COUNTRY) || v(r, VOL.TOOL));
 
   const skills    = volRows.map(r => v(r, VOL.SKILL)).filter(Boolean);
   const countries = volRows.map(r => v(r, VOL.COUNTRY)).filter(Boolean);
@@ -663,7 +620,6 @@ function renderDashboard(rows1, rows2, rows3) {
   const firstTimers     = firstTime.filter(f => /yes|y|true|1/i.test(f)).length;
   const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
 
-  // Vol stat cards
   document.getElementById('vol-stat-row').innerHTML = `
     <div class="metric">
       <div class="metric-label">Submissions</div>
@@ -687,7 +643,6 @@ function renderDashboard(rows1, rows2, rows3) {
     </div>
   `;
 
-  // Skill chart
   const skillCounts = countBy(skills);
   const skillOrder  = ['Beginner','Intermediate','Advanced','Expert'];
   const skillLabels = skillOrder.filter(s => skillCounts[s]);
@@ -712,7 +667,6 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // Tool chart — top 6
   const toolCounts = countBy(tools);
   const topTools   = topN(toolCounts, 6);
   destroyChart('tool');
@@ -724,8 +678,7 @@ function renderDashboard(rows1, rows2, rows3) {
         backgroundColor:'#534AB7', borderRadius:4, borderSkipped:false }]
     },
     options: {
-      indexAxis:'y',
-      responsive:true, maintainAspectRatio:false,
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' uses'}} },
       scales:{
         x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
@@ -734,7 +687,6 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // Country chart — top 6
   const countryCounts = countBy(countries);
   const topCountries  = topN(countryCounts, 6);
   destroyChart('country');
@@ -746,8 +698,7 @@ function renderDashboard(rows1, rows2, rows3) {
         backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false }]
     },
     options: {
-      indexAxis:'y',
-      responsive:true, maintainAspectRatio:false,
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}} },
       scales:{
         x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
@@ -756,8 +707,6 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // Cities pill list
-  // Count unique volunteers per city — store name, country, submission count
   const cityVolMap = {};
   volRows.forEach(r => {
     const city = v(r, VOL.CITY);
@@ -771,10 +720,8 @@ function renderDashboard(rows1, rows2, rows3) {
     .map(([city, data]) => [city, Object.keys(data.volunteers).length, data])
     .sort((a,b) => b[1]-a[1]);
 
-  // Render cities mini-map
   renderCitiesMap(topCities);
 
-  // First time chart
   const ftYes = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const ftNo  = firstTime.length - ftYes;
   destroyChart('firstTime');
@@ -793,7 +740,6 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // ── Insights ─────────────────────────────────────────────────────────────
   const largestOrg = orgs.reduce((a,b)=>a.hours>b.hours?a:b);
   const largestPct = Math.round(largestOrg.hours/totalHours*100);
   const completedSurveys = orgs.filter(o=>o.sat.length>0).length;
@@ -836,7 +782,6 @@ function renderFeedback(rows3) {
     el.innerHTML = '<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';
     return;
   }
-  // Enjoyed comments — up to 4 recent, anonymous
   const enjoyed = fbRows.map(r => v(r, FB.ENJOYED))
     .filter(t => t.length > 15).slice(-4).reverse();
   el.innerHTML = `<div class="quotes-grid">${
@@ -846,8 +791,6 @@ function renderFeedback(rows3) {
     </div>`).join('')
   }</div>`;
 }
-
-
 
 function setSurveyPanel(panel, btn) {
   document.querySelectorAll('#toggle-org, #toggle-vol').forEach(b => b.classList.remove('active'));
@@ -901,7 +844,6 @@ function renderOrgImpact(activeKey) {
   const keys = Object.keys(surveyData);
   const key = activeKey || keys[0];
 
-  // Render tabs
   tabsEl.innerHTML = keys.map(k =>
     `<button class="tab ${k===key?'active':''}" onclick="renderOrgImpact('${k}')">${surveyData[k].tab}</button>`
   ).join('');
@@ -924,10 +866,10 @@ function renderOrgImpact(activeKey) {
       </div>`;
       return;
     }
-    const avg = q.vals.reduce((a,b)=>a+b,0)/q.vals.length;
-    const rounded = Math.round(avg*10)/10;
+    const a = q.vals.reduce((x,y)=>x+y,0)/q.vals.length;
+    const rounded = Math.round(a*10)/10;
     const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
-    const fullStars = Math.round(avg);
+    const fullStars = Math.round(a);
     const stars = Array.from({length:5},(_,i)=>
       `<span style="font-size:14px;color:${i<fullStars?'#1d9e75':'#d3d1c7'}">★</span>`
     ).join('');
@@ -942,8 +884,6 @@ function renderOrgImpact(activeKey) {
   });
   container.innerHTML = html;
 }
-
-function showSurvey(key, btn) { renderOrgImpact(key); }
 
 loadAll();
 </script>
