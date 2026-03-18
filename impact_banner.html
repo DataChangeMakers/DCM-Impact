@@ -400,13 +400,6 @@ async function init() {
     // Volunteer feedback ratings
     bRenderVolFeedback(rows3);
 
-    // Pick a recent enjoyed comment for the panel
-    const enjoyedComments = fbRows.map(r => v(r, FB.ENJOYED)).filter(t => t.length > 20);
-    if (enjoyedComments.length) {
-      const pick = enjoyedComments[enjoyedComments.length - 1];
-      document.getElementById('b-fb-enjoy').textContent = pick.length > 120 ? pick.slice(0,117)+'…' : pick;
-    }
-
     // Quotes
     bQuotes = projects.map(r => ({
       text: v(r, COL.QUOTES),
