@@ -746,6 +746,7 @@ function renderDashboard(rows1, rows2, rows3) {
 
   renderFeedback(rows3);
   renderInlineFeedback(rows3);
+  setSurveyPanel('vol', document.getElementById('toggle-vol'));
 
   document.getElementById('insight-row').innerHTML = `
     <div class="insight-card">
