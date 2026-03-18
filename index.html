@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data ChangeMakers — Impact Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f8f6; color: #1a1a18; min-height: 100vh; padding: 2rem 1rem; }
+  .page { max-width: 960px; margin: 0 auto; }
+
+  .header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid #e0deda; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 24px; font-weight: 500; color: #1a1a18; }
+  .header p { font-size: 13px; color: #888780; margin-top: 4px; }
+  .refresh-btn { font-size: 12px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: #fff; cursor: pointer; color: #888780; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .refresh-btn:hover { background: #f1efe8; color: #1a1a18; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #b4b2a9; display: inline-block; }
+  .status-dot.live { background: #1d9e75; }
+
+  .loading { text-align: center; padding: 4rem 2rem; color: #888780; font-size: 14px; }
+  .loading-spinner { width: 28px; height: 28px; border: 2px solid #e0deda; border-top-color: #1d9e75; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { background: #faece7; border-radius: 8px; padding: 16px 20px; color: #993c1d; font-size: 13px; line-height: 1.6; margin-bottom: 1.5rem; }
+
+  .section-label { font-size: 11px; letter-spacing: 0.08em; color: #b4b2a9; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .metric { background: #f1efe8; border-radius: 8px; padding: 14px 16px; }
+  .metric-label { font-size: 12px; color: #888780; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 500; color: #1a1a18; line-height: 1; }
+  .metric-sub { font-size: 11px; color: #b4b2a9; margin-top: 4px; }
+  .metric-accent { background: #e1f5ee; }
+  .metric-accent .metric-value { color: #0f6e56; }
+
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .chart-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
+  .chart-title { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
+  .chart-sub { font-size: 11px; color: #b4b2a9; margin-bottom: 14px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tab { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
+  .tab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
+  .tab:hover { background: #f1efe8; }
+  .survey-section { min-height: 180px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-label { font-size: 11px; color: #888780; width: 130px; flex-shrink: 0; line-height: 1.3; }
+  .bar-track { flex: 1; background: #f1efe8; border-radius: 3px; height: 8px; }
+  .bar-fill { height: 8px; border-radius: 3px; transition: width 0.6s ease; }
+  .bar-val { font-size: 11px; color: #b4b2a9; width: 28px; text-align: right; }
+
+  .quotes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .quote-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
+  .quote-mark { font-size: 28px; line-height: 1; color: #1d9e75; font-weight: 500; margin-bottom: 4px; }
+  .quote-text { font-size: 12px; color: #2c2c2a; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
+  .quote-org { font-size: 11px; color: #b4b2a9; font-weight: 500; }
+
+  .table-wrap { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; overflow-x: auto; }
+  .projects-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
+  .projects-table th { text-align: left; font-weight: 500; color: #888780; padding: 8px 12px; border-bottom: 0.5px solid #e0deda; font-size: 11px; background: #faf9f7; white-space: nowrap; }
+  .projects-table td { padding: 10px 12px; border-bottom: 0.5px solid #f1efe8; color: #1a1a18; vertical-align: middle; }
+  .projects-table tr:last-child td { border-bottom: none; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
+  .badge-viz { background: #e1f5ee; color: #0f6e56; }
+  .badge-multi { background: #eeedfe; color: #534ab7; }
+  .badge-edu { background: #faeeda; color: #854f0b; }
+  .badge-health { background: #faece7; color: #993c1d; }
+  .badge-beginner { background: #e6f1fb; color: #185fa5; }
+  .badge-intermediate { background: #eeedfe; color: #534ab7; }
+  .badge-advanced { background: #e1f5ee; color: #0f6e56; }
+  .stars { color: #ef9f27; font-size: 12px; }
+
+  /* Volunteer section */
+  .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .vol-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 99px; background: #f1efe8; color: #5f5e5a; border: 0.5px solid #e0deda; }
+  .pill-highlight { background: #e1f5ee; color: #0f6e56; border-color: #9fe1cb; }
+
+  .insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .insight-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
+  .insight-num { font-size: 32px; font-weight: 500; color: #0f6e56; line-height: 1; }
+  .insight-label { font-size: 12px; color: #888780; margin-top: 4px; }
+  .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
+  .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
+
+  /* Volunteer feedback */
+  .fb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .fb-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
+  .fb-rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .fb-rating-label { font-size: 12px; color: #888780; flex: 1; }
+  .fb-stars { display: flex; gap: 2px; }
+  .fb-star { font-size: 13px; }
+  .fb-score { font-size: 12px; font-weight: 500; color: #1d9e75; min-width: 28px; text-align: right; }
+  .fb-comment { font-size: 12px; color: #2c2c2a; font-style: italic; line-height: 1.6; padding: 10px 12px; background: #f9f8f6; border-radius: 8px; margin-bottom: 8px; }
+  .fb-comment-author { font-size: 11px; color: #b4b2a9; font-weight: 500; }
+  .fb-improve { font-size: 12px; color: #888780; line-height: 1.6; padding: 10px 12px; background: #f9f8f6; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #e0deda; }
+
+  .footer { font-size: 11px; color: #b4b2a9; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid #e0deda; }
+
+  @media (max-width: 700px) {
+    .charts-row { grid-template-columns: 1fr; }
+    .vol-charts-row { grid-template-columns: 1fr; }
+    .quotes-grid { grid-template-columns: 1fr; }
+    .insight-row { grid-template-columns: 1fr 1fr; }
+    .header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <img src="https://static.wixstatic.com/media/2608ce_4ffd1217cfad49bb950c7e852ea7dbc0~mv2.png/v1/crop/x_0,y_84,w_1280,h_857/fill/w_133,h_89,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/FullLogo_Transparent.png" alt="Data ChangeMakers" style="height:52px; width:auto; display:block;">
+      <div>
+        <h1>Data ChangeMakers</h1>
+        <p id="subtitle">Impact dashboard — loading...</p>
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="loadAll()">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="refresh-label">Refresh data</span>
+    </button>
+  </div>
+
+  <div id="error-area"></div>
+  <div id="loading-area" class="loading">
+    <div class="loading-spinner"></div>
+    Connecting to Google Sheets...
+  </div>
+
+  <div id="dashboard" style="display:none;">
+
+    <div class="section-label">Key numbers</div>
+    <div class="metric-grid" id="metric-grid"></div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Hours by organisation</div>
+        <div class="chart-sub">data visualisation projects only</div>
+        <div style="position: relative; width: 100%; height: 260px;">
+          <canvas id="hoursChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div class="chart-title" id="survey-panel-title">Organisation impact</div>
+          <div style="display:flex;gap:4px;">
+            <button id="toggle-org" class="tab active" onclick="setSurveyPanel('org',this)" style="font-size:11px;padding:3px 10px;">Organisation impact</button>
+            <button id="toggle-vol" class="tab" onclick="setSurveyPanel('vol',this)" style="font-size:11px;padding:3px 10px;">Volunteer feedback</button>
+          </div>
+        </div>
+
+        <!-- Org survey view -->
+        <div id="panel-org">
+          <div class="tabs" id="survey-tabs" style="margin-bottom:10px;"></div>
+          <div id="survey-data" class="survey-section"></div>
+        </div>
+
+        <!-- Volunteer feedback view -->
+        <div id="panel-vol" style="display:none;">
+          <div id="inline-fb-ratings" style="padding-top:4px;"></div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <div class="section-label">What our partners say</div>
+    <div class="quotes-grid" id="quotes-grid"></div>
+
+    <div class="section-label">Organisation overview</div>
+    <div class="table-wrap">
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>Organisation</th>
+            <th>Project type</th>
+            <th>Volunteers</th>
+            <th>Total hours</th>
+            <th>Students</th>
+          </tr>
+        </thead>
+        <tbody id="proj-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- VOLUNTEER SECTION -->
+    <div class="section-label">Our volunteers</div>
+    <div class="vol-stat-row" id="vol-stat-row"></div>
+
+    <div class="vol-charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Data skill level</div>
+        <div class="chart-sub">self-reported by volunteers</div>
+        <div style="position: relative; width: 100%; height: 200px;">
+          <canvas id="skillChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Tools used</div>
+        <div class="chart-sub">across all submissions</div>
+        <div style="position: relative; width: 100%; height: 200px;">
+          <canvas id="toolChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top countries</div>
+        <div class="chart-sub">volunteer locations</div>
+        <div style="position: relative; width: 100%; height: 200px;">
+          <canvas id="countryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card" style="padding:0;overflow:hidden;">
+        <div style="padding:1rem 1.25rem 0.5rem;">
+          <div class="chart-title">Volunteer locations</div>
+          <div class="chart-sub">cities where our volunteers are based — <span id="cities-map-count"></span></div>
+        </div>
+        <div id="cities-map" style="height:240px;width:100%;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">First-time participants</div>
+        <div class="chart-sub">new vs returning volunteers</div>
+        <div style="position: relative; width: 100%; height: 180px;">
+          <canvas id="firstTimeChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Volunteer feedback — what they enjoyed</div>
+    <div id="fb-enjoyed-only" style="margin-bottom:1.5rem;"></div>
+
+    <div class="section-label">Insights</div>
+    <div class="insight-row" id="insight-row"></div>
+    <div class="callout">
+      <div class="callout-text" id="callout-text"></div>
+    </div>
+
+    <div class="footer">Data ChangeMakers · Impact Report · Live from Google Sheets · Last updated: <span id="last-updated">—</span></div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const API_KEY      = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
+const SHEET1_ID    = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
+const SHEET1_TAB   = 'Project Impact';
+const SHEET2_ID    = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
+const SHEET2_TAB   = 'All Submissions';
+const SHEET3_ID    = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
+const SHEET3_TAB   = 'Feedback';
+// Feedback columns: 1:Time 2:Project 3:First 4:Last 5:Email 6:Contact
+// 7:Overall 8:CharityChoice 9:DataInstructions 10:DCMSupport 11:LiveEvent
+// 12:Enjoyed 13:Improved
+const FB = { PROJECT:2, FNAME:3, LNAME:4, OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12, IMPROVED:13 };
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Sheet 1 column indices (1-based)
+// A=1 Project ID, B=2 Date, C=3 Charity Name, D=4 Project Type,
+// E=5 Volunteers, F=6 Hours spent, G=7 Support hours, H=8 $ consulting,
+// I=9 Vols post, J=10 Hours post, K=11 Products, L=12 Students,
+// M=13 Indirect hours, N=14 Grand total hours spent
+// O onwards = survey columns
+const COL = {
+  PROJECT_ID:1, DATE:2, CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6,
+  HOURS_SUPPORT:7, STUDENTS:12, GRAND_TOTAL:14,
+  PRE_DATA:15, POST_DATA:16, PRE_LITERACY:17, POST_LITERACY:18,
+  PRE_TOOLS:19, POST_SUPPORT:20, PRE_IMPACT:21, POST_IMPACT:22,
+  PRE_DECISIONS:23, POST_DECISIONS:24,
+  POST_DCM_QUALITY:27, POST_PARTNER_AGAIN:28,
+  POST_PROGRAMS:30, POST_MEASURE:31,
+  OVERALL_SAT:33, LIKELY_RECOMMEND:34, QUOTES:35,
+};
+
+// Sheet 2 column indices (1-based) — based on headers provided
+// Submission ID, Project ID, Date, Charity Name, First name, Last name, Email,
+// Project Type, Data skill level?, Country, City, Hours spent,
+// First time entering?, Tool used?, Link, Screenshot, Charity Country, Topic, Selected to Present
+const VOL = {
+  CHARITY:4, PROJECT_TYPE:8, SKILL:9, COUNTRY:10, CITY:11,
+  HOURS:12, FIRST_TIME:13, TOOL:14,
+};
+
+let charts = {};
+let surveyData = {};
+
+function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
+function n(row, col) { const val = parseFloat(v(row, col).replace(/[$,]/g, "")); return isNaN(val) ? null : val; }
+
+function sheetURL(id, tab) {
+  return `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
+}
+
+async function fetchSheet(id, tab, skipRows = 1) {
+  const res = await fetch(sheetURL(id, tab));
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Fetch failed'); }
+  const json = await res.json();
+  return (json.values || []).slice(skipRows).filter(r => r.some(c => String(c).trim() !== ""));
+}
+
+const CITY_GEO = {
+  'sydney':[-33.86,151.20],'melbourne':[-37.81,144.96],'brisbane':[-27.47,153.02],'perth':[-31.95,115.86],
+  'adelaide':[-34.92,138.60],'auckland':[-36.84,174.76],'london':[51.50,-0.12],'manchester':[53.48,-2.24],
+  'birmingham':[52.48,-1.89],'edinburgh':[55.95,-3.18],'dublin':[53.33,-6.24],'new york city':[40.71,-74.00],
+  'new york':[40.71,-74.00],'los angeles':[34.05,-118.24],'chicago':[41.87,-87.62],'san francisco':[37.77,-122.41],
+  'seattle':[47.60,-122.33],'boston':[42.36,-71.05],'toronto':[43.65,-79.38],'vancouver':[49.24,-123.11],
+  'montreal':[45.50,-73.56],'ottawa':[45.42,-75.69],'bangalore':[12.97,77.59],'mumbai':[19.07,72.87],
+  'delhi':[28.61,77.20],'hyderabad':[17.38,78.48],'chennai':[13.08,80.27],'pune':[18.52,73.85],
+  'berlin':[52.52,13.40],'munich':[48.13,11.57],'hamburg':[53.55,9.99],'paris':[48.85,2.35],
+  'amsterdam':[52.37,4.89],'barcelona':[41.38,2.15],'madrid':[40.41,-3.70],'rome':[41.89,12.48],
+  'milan':[45.46,9.18],'zurich':[47.37,8.54],'brussels':[50.85,4.35],'stockholm':[59.33,18.06],
+  'oslo':[59.91,10.75],'copenhagen':[55.67,12.56],'helsinki':[60.16,24.93],'singapore':[1.35,103.81],
+  'tokyo':[35.68,139.69],'seoul':[37.56,126.97],'beijing':[39.90,116.40],'shanghai':[31.22,121.47],
+  'hong kong':[22.31,114.17],'nairobi':[-1.28,36.81],'cape town':[-33.92,18.42],'johannesburg':[-26.20,28.04],
+  'karachi':[24.86,67.01],'lahore':[31.55,74.34],'dhaka':[23.81,90.41],'colombo':[6.92,79.84],
+  'jakarta':[-6.21,106.84],'kuala lumpur':[3.14,101.68],'manila':[14.59,120.97],'bangkok':[13.75,100.52],
+  'buenos aires':[-34.60,-58.38],'sao paulo':[-23.54,-46.62],'bogota':[4.71,-74.07],
+  'mexico city':[19.42,-99.13],'ruston':[32.52,-92.63],'carmel':[36.55,-121.92],
+  'maidenhead':[51.52,-0.72],'norwich':[52.63,1.30],'arlington':[32.73,-97.10],
+  'vijayanagara':[15.34,76.46],'vijayanagara, karnataka':[15.34,76.46],
+};
+
+let citiesMap = null;
+let citiesMarkerLayer = null;
+
+function renderCitiesMap(topCities) {
+  const el = document.getElementById('cities-map');
+  if (!el || typeof L === 'undefined') return;
+
+  if (!citiesMap) {
+    citiesMap = L.map('cities-map', { zoomControl: true, scrollWheelZoom: false }).setView([20,10],2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap', maxZoom: 19
+    }).addTo(citiesMap);
+    citiesMarkerLayer = L.layerGroup().addTo(citiesMap);
+  }
+  citiesMarkerLayer.clearLayers();
+
+  const plotted = [];
+  topCities.forEach(([city, count, data]) => {
+    const coords = CITY_GEO[city.toLowerCase()];
+    if (!coords) return;
+    const size = Math.min(8 + count * 4, 28);
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${count>1?9:0}px;font-weight:700;">${count>1?count:''}</div>`,
+      iconSize:[size,size], iconAnchor:[size/2,size/2],
+    });
+
+    // Build volunteer list sorted by submission count desc
+    const country = data ? data.country : '';
+    const volEntries = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]) : [];
+    const volRows_html = volEntries.map(([name, subs]) =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px;">
+        <span>${name}</span>
+        <span style="color:#1D9E75;font-weight:700;margin-left:12px;">${subs} sub${subs>1?'s':''}</span>
+      </div>`
+    ).join('');
+
+    const popup = `<div style="font-family:sans-serif;min-width:180px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${city}</div>
+      ${country ? `<div style="font-size:11px;color:#888;margin-bottom:8px;">${country}</div>` : ''}
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#b4b2a9;margin-bottom:6px;">${count} volunteer${count>1?'s':''}</div>
+      ${volRows_html}
+    </div>`;
+
+    L.marker(coords, {icon}).bindPopup(popup, {maxWidth: 240}).addTo(citiesMarkerLayer);
+    plotted.push(coords);
+  });
+
+  const countEl = document.getElementById('cities-map-count');
+  if (countEl) countEl.textContent = `${plotted.length} cities mapped`;
+
+  setTimeout(() => {
+    citiesMap.invalidateSize();
+    if (plotted.length > 0) {
+      citiesMap.fitBounds(L.latLngBounds(plotted), { padding:[20,20], maxZoom:4 });
+    }
+  }, 200);
+}
+
+async function loadAll() {
+  const dot = document.getElementById('status-dot');
+  const label = document.getElementById('refresh-label');
+  dot.classList.remove('live');
+  label.textContent = 'Loading...';
+  document.getElementById('error-area').innerHTML = '';
+  document.getElementById('loading-area').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+
+  try {
+    const [rows1, rows2, rows3] = await Promise.all([
+      fetchSheet(SHEET1_ID, SHEET1_TAB, 1),
+      fetchSheet(SHEET2_ID, SHEET2_TAB, 1),
+      fetchSheet(SHEET3_ID, SHEET3_TAB, 1),
+    ]);
+    renderDashboard(rows1, rows2, rows3);
+    dot.classList.add('live');
+    label.textContent = 'Refresh data';
+    document.getElementById('last-updated').textContent =
+      new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' });
+    document.getElementById('loading-area').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+  } catch(err) {
+    document.getElementById('loading-area').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>
+      Make sure both sheets are shared as "Anyone with the link can view".</div>`;
+    label.textContent = 'Retry';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+
+function countBy(arr) {
+  return arr.reduce((acc, val) => {
+    if (!val || val === '—' || val === '') return acc;
+    acc[val] = (acc[val] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function topN(obj, n) {
+  return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function mergeOrgs(rows) {
+  // Each project row becomes its own entry; No Kill Colorado kept as separate rows
+  return rows.map(row => {
+    const raw = v(row, COL.CHARITY).replace(/[Cc]ollorado/g, 'Colorado').trim();
+    const type = v(row, COL.TYPE).toLowerCase();
+    const rowHours = n(row, COL.GRAND_TOTAL) || n(row, COL.HOURS_PROJECT) || 0;
+    const sat = n(row, COL.OVERALL_SAT);
+    const rec = n(row, COL.LIKELY_RECOMMEND);
+    const q = v(row, COL.QUOTES);
+    const isViz = type.includes('visuali');
+    return {
+      name: raw,
+      types: new Set([type]),
+      vols: n(row, COL.VOLS_PROJECT) || 0,
+      hours: rowHours,
+      vizHours: isViz ? rowHours : 0,
+      students: n(row, COL.STUDENTS) || 0,
+      sat: sat ? [sat] : [],
+      recommend: rec ? [rec] : [],
+      quotes: q ? [{ text: q, org: raw }] : [],
+      surveyRows: [row],
+    };
+  }).filter(o => o.name);
+}
+
+function getTypeInfo(types) {
+  const arr = [...types];
+  if (arr.length > 1) return { label: 'Multiple', badge: 'badge-multi' };
+  const t = arr[0] || '';
+  if (t.includes('visuali')) return { label: 'Data viz', badge: 'badge-viz' };
+  if (t.includes('wrangle')) return { label: 'Data wrangling', badge: 'badge-multi' };
+  if (t.includes('learn') || t.includes('educat')) return { label: 'Learning', badge: 'badge-edu' };
+  if (t.includes('health')) return { label: 'Health check', badge: 'badge-health' };
+  return { label: t || '—', badge: 'badge-viz' };
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function renderDashboard(rows1, rows2, rows3) {
+  const orgs = mergeOrgs(rows1.filter(r => v(r, COL.CHARITY).length > 1));
+
+  // Subtitle
+  const uniqueOrgCount = new Set(orgs.map(o => o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
+  document.getElementById('subtitle').textContent =
+    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${rows2.length} volunteer submissions`;
+
+  // ── Key metrics ──────────────────────────────────────────────────────────
+  const totalHours = orgs.reduce((s,o)=>s+o.hours,0);
+  const totalVols  = orgs.reduce((s,o)=>s+o.vols,0);
+  const totalStudents = orgs.reduce((s,o)=>s+o.students,0);
+  const allSat = orgs.flatMap(o=>o.sat);
+  const avgSat = avg(allSat);
+  const totalSubmissions = rows2.length;
+  const avgHoursPerProject = orgs.length ? Math.round(totalHours / orgs.length) : 0;
+
+  // Volunteer overall experience average from feedback sheet
+  const fbAllRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
+  const fbOverallVals = fbAllRows.map(r => n(r, FB.OVERALL)).filter(x => x > 0);
+  const volOverallAvg = fbOverallVals.length
+    ? (Math.round(fbOverallVals.reduce((a,b)=>a+b,0)/fbOverallVals.length * 10) / 10).toFixed(1)
+    : null;
+
+  document.getElementById('metric-grid').innerHTML = `
+    <div class="metric metric-accent">
+      <div class="metric-label">Volunteer hours</div>
+      <div class="metric-value">${totalHours.toLocaleString()}</div>
+      <div class="metric-sub">across all projects</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Volunteers</div>
+      <div class="metric-value">${totalVols}</div>
+      <div class="metric-sub">total participants</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Nonprofits served</div>
+      <div class="metric-value">${uniqueOrgCount}</div>
+      <div class="metric-sub">unique organisations</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Avg hours / project</div>
+      <div class="metric-value">${avgHoursPerProject}</div>
+      <div class="metric-sub">volunteer hours avg</div>
+    </div>
+
+    ${avgSat ? `<div class="metric">
+      <div class="metric-label">Organisation feedback</div>
+      <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span>${Array.from({length:5},(_,i)=>'<span style="color:'+(i<Math.round(avgSat)?'#ef9f27':'#d3d1c7')+';font-size:16px;">★</span>').join('')}</span>
+        <span style="font-size:13px;font-weight:400;color:#888780;">${avgSat%1===0?avgSat:avgSat.toFixed(1)}/5</span>
+      </div>
+      <div class="metric-sub">post-project survey avg</div>
+    </div>` : ''}
+    ${volOverallAvg ? `<div class="metric">
+      <div class="metric-label">Volunteer overall exp.</div>
+      <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span>${Array.from({length:5},(_,i)=>'<span style="color:'+(i<Math.round(parseFloat(volOverallAvg))?'#ef9f27':'#d3d1c7')+';font-size:16px;">★</span>').join('')}</span>
+        <span style="font-size:13px;font-weight:400;color:#888780;">${parseFloat(volOverallAvg)%1===0?parseInt(volOverallAvg):volOverallAvg}/5</span>
+      </div>
+      <div class="metric-sub">volunteer feedback avg</div>
+    </div>` : ''}
+  `;
+
+  // ── Hours chart ──────────────────────────────────────────────────────────
+  const vizOrgs = orgs.filter(o=>o.vizHours>0);
+  destroyChart('hours');
+  charts.hours = new Chart(document.getElementById('hoursChart'), {
+    type: 'bar',
+    data: {
+      labels: vizOrgs.map(o=>o.name.length>14?o.name.slice(0,13)+'…':o.name),
+      datasets: [{ data: vizOrgs.map(o=>o.vizHours), backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}} },
+      scales:{
+        x:{ticks:{font:{size:10},maxRotation:45,autoSkip:false},grid:{display:false}},
+        y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
+      }
+    }
+  });
+
+  // ── Survey (post-project averaged) ──────────────────────────────────────
+  const surveyCategories = [
+    {
+      key: 'data',
+      tab: 'Data',
+      questions: [
+        { col: COL.POST_DATA,     label: 'More confident discussing and using data internally' },
+        { col: COL.POST_SUPPORT,  label: 'Data support from DCM was valuable' },
+      ]
+    },
+    {
+      key: 'literacy',
+      tab: 'Literacy',
+      questions: [
+        { col: COL.POST_LITERACY, label: 'Improved data literacy and confidence with data' },
+      ]
+    },
+    {
+      key: 'impact',
+      tab: 'Impact',
+      questions: [
+        { col: COL.POST_IMPACT,   label: 'Increased confidence demonstrating impact to funders' },
+        { col: COL.POST_PROGRAMS, label: 'Dashboards improved ability to deliver better programs' },
+        { col: COL.POST_MEASURE,  label: 'Better able to measure and share results with stakeholders' },
+      ]
+    },
+    {
+      key: 'decisions',
+      tab: 'Decisions',
+      questions: [
+        { col: COL.POST_DECISIONS, label: 'Better decisions using data' },
+      ]
+    },
+    {
+      key: 'dcm',
+      tab: 'DCM',
+      questions: [
+        { col: COL.POST_DCM_QUALITY,    label: 'Satisfied with quality of DCM support and contributions' },
+        { col: COL.POST_PARTNER_AGAIN,  label: 'Likely to partner with Data ChangeMakers again' },
+        { col: COL.OVERALL_SAT,         label: 'Overall satisfaction with the project' },
+        { col: COL.LIKELY_RECOMMEND,    label: 'Likely to recommend DCM to another nonprofit' },
+      ]
+    },
+  ];
+
+  surveyData = {};
+  surveyCategories.forEach(cat => {
+    const questionsWithVals = cat.questions.map(q => {
+      const vals = [];
+      orgs.forEach(org => {
+        org.surveyRows.forEach(row => {
+          const val = n(row, q.col);
+          if (val) vals.push(val);
+        });
+      });
+      return { label: q.label, vals };
+    });
+    surveyData[cat.key] = { tab: cat.tab, questions: questionsWithVals };
+  });
+  renderOrgImpact('data');
+
+  // ── Quotes ───────────────────────────────────────────────────────────────
+  const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
+  document.getElementById('quotes-grid').innerHTML = allQuotes.map(q => {
+    const sentences = q.text.split(/[.!?][""]?\s+/);
+    const display = sentences[0].length>30 ? sentences[0] : sentences.slice(0,2).join('. ');
+    const clean = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
+    return `<div class="quote-card">
+      <div class="quote-mark">"</div>
+      <div class="quote-text">${clean}${clean.endsWith('.')?'':'.'}</div>
+      <div class="quote-org">${q.org}</div>
+    </div>`;
+  }).join('');
+
+  // ── Org table ────────────────────────────────────────────────────────────
+  document.getElementById('proj-tbody').innerHTML = orgs.map(o => {
+    const {label,badge} = getTypeInfo(o.types);
+    const satAvg = avg(o.sat);
+    const recAvg = avg(o.recommend);
+    const satStr = satAvg
+      ? '★'.repeat(Math.round(satAvg))+'<span style="color:#d3d1c7">'+'★'.repeat(5-Math.round(satAvg))+'</span>'
+      : '<span style="color:#d3d1c7">—</span>';
+    return `<tr>
+      <td style="font-weight:500;">${o.name}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td>${o.vols||'—'}</td>
+      <td>${Math.round(o.hours).toLocaleString()}</td>
+      <td>${o.students||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // ════════════════════════════════════════════════════════════════════════
+  // VOLUNTEER SECTION — Sheet 2
+  // ════════════════════════════════════════════════════════════════════════
+  const volRows = rows2.filter(r => v(r, VOL.SKILL) || v(r, VOL.COUNTRY) || v(r, VOL.TOOL));
+
+  const skills    = volRows.map(r => v(r, VOL.SKILL)).filter(Boolean);
+  const countries = volRows.map(r => v(r, VOL.COUNTRY)).filter(Boolean);
+  const cities    = volRows.map(r => v(r, VOL.CITY)).filter(Boolean);
+  const tools     = volRows.flatMap(r => v(r, VOL.TOOL).split(/[,;/]/).map(t=>t.trim())).filter(Boolean);
+  const firstTime = volRows.map(r => v(r, VOL.FIRST_TIME)).filter(Boolean);
+
+  const uniqueCountries = new Set(countries).size;
+  const uniqueCities    = new Set(cities).size;
+  const firstTimers     = firstTime.filter(f => /yes|y|true|1/i.test(f)).length;
+  const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
+
+  // Vol stat cards
+  document.getElementById('vol-stat-row').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">Submissions</div>
+      <div class="metric-value">${volRows.length}</div>
+      <div class="metric-sub">volunteer entries</div>
+    </div>
+    <div class="metric metric-accent">
+      <div class="metric-label">Countries</div>
+      <div class="metric-value">${uniqueCountries}</div>
+      <div class="metric-sub">represented</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Cities</div>
+      <div class="metric-value">${uniqueCities}</div>
+      <div class="metric-sub">volunteer locations</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">First-timers</div>
+      <div class="metric-value">${firstTimePct}%</div>
+      <div class="metric-sub">new to programme</div>
+    </div>
+  `;
+
+  // Skill chart
+  const skillCounts = countBy(skills);
+  const skillOrder  = ['Beginner','Intermediate','Advanced','Expert'];
+  const skillLabels = skillOrder.filter(s => skillCounts[s]);
+  const skillVals   = skillLabels.map(s => skillCounts[s]||0);
+  const skillColors = ['#378ADD','#534AB7','#1D9E75','#0F6E56'];
+
+  destroyChart('skill');
+  charts.skill = new Chart(document.getElementById('skillChart'), {
+    type: 'bar',
+    data: {
+      labels: skillLabels.length ? skillLabels : Object.keys(skillCounts),
+      datasets: [{ data: skillLabels.length ? skillVals : Object.values(skillCounts),
+        backgroundColor: skillColors, borderRadius:4, borderSkipped:false }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}} },
+      scales:{
+        x:{ticks:{font:{size:10}},grid:{display:false}},
+        y:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}}
+      }
+    }
+  });
+
+  // Tool chart — top 6
+  const toolCounts = countBy(tools);
+  const topTools   = topN(toolCounts, 6);
+  destroyChart('tool');
+  charts.tool = new Chart(document.getElementById('toolChart'), {
+    type: 'bar',
+    data: {
+      labels: topTools.map(([t])=>t.length>12?t.slice(0,11)+'…':t),
+      datasets: [{ data: topTools.map(([,c])=>c),
+        backgroundColor:'#534AB7', borderRadius:4, borderSkipped:false }]
+    },
+    options: {
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' uses'}} },
+      scales:{
+        x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
+        y:{ticks:{font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+
+  // Country chart — top 6
+  const countryCounts = countBy(countries);
+  const topCountries  = topN(countryCounts, 6);
+  destroyChart('country');
+  charts.country = new Chart(document.getElementById('countryChart'), {
+    type: 'bar',
+    data: {
+      labels: topCountries.map(([c])=>c.length>14?c.slice(0,13)+'…':c),
+      datasets: [{ data: topCountries.map(([,n])=>n),
+        backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false }]
+    },
+    options: {
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}} },
+      scales:{
+        x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
+        y:{ticks:{font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+
+  // Cities pill list
+  // Count unique volunteers per city — store name, country, submission count
+  const cityVolMap = {};
+  volRows.forEach(r => {
+    const city = v(r, VOL.CITY);
+    if (!city) return;
+    const name = ((r[4]||'') + ' ' + (r[5]||'')).trim() || 'Volunteer';
+    const country = v(r, VOL.COUNTRY);
+    if (!cityVolMap[city]) cityVolMap[city] = { country, volunteers: {} };
+    cityVolMap[city].volunteers[name] = (cityVolMap[city].volunteers[name] || 0) + 1;
+  });
+  const topCities = Object.entries(cityVolMap)
+    .map(([city, data]) => [city, Object.keys(data.volunteers).length, data])
+    .sort((a,b) => b[1]-a[1]);
+
+  // Render cities mini-map
+  renderCitiesMap(topCities);
+
+  // First time chart
+  const ftYes = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
+  const ftNo  = firstTime.length - ftYes;
+  destroyChart('firstTime');
+  charts.firstTime = new Chart(document.getElementById('firstTimeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['First time','Returning'],
+      datasets: [{ data:[ftYes,ftNo], backgroundColor:['#1D9E75','#D3D1C7'], borderWidth:2, borderColor:'#fff' }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{font:{size:11},padding:12,boxWidth:10} },
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/firstTime.length*100)}%)`}}
+      }
+    }
+  });
+
+  // ── Insights ─────────────────────────────────────────────────────────────
+  const largestOrg = orgs.reduce((a,b)=>a.hours>b.hours?a:b);
+  const largestPct = Math.round(largestOrg.hours/totalHours*100);
+  const completedSurveys = orgs.filter(o=>o.sat.length>0).length;
+  const topSkill = topN(skillCounts,1)[0];
+  const topTool  = topN(toolCounts,1)[0];
+
+  renderFeedback(rows3);
+  renderInlineFeedback(rows3);
+
+  document.getElementById('insight-row').innerHTML = `
+    <div class="insight-card">
+      <div class="insight-num">${uniqueCountries}</div>
+      <div class="insight-label">Countries represented across our volunteer community</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">${firstTimePct}%</div>
+      <div class="insight-label">Of volunteers are participating in Data ChangeMakers for the first time</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">${largestPct}%</div>
+      <div class="insight-label">Of all hours were delivered to ${largestOrg.name} — the flagship project</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">${avgSat?avgSat.toFixed(1)+'/5':'—'}</div>
+      <div class="insight-label">Average satisfaction across ${completedSurveys} post-project surveys</div>
+    </div>
+  `;
+
+  const topToolStr  = topTool  ? ` The most used tool is ${topTool[0]}.` : '';
+  const topSkillStr = topSkill ? ` Most volunteers self-identify as ${topSkill[0].toLowerCase()} level.` : '';
+  document.getElementById('callout-text').textContent =
+    `Volunteers span ${uniqueCountries} countries and ${uniqueCities} cities, reflecting a truly global community.${topSkillStr}${topToolStr} ${completedSurveys} of ${orgs.length} organisations have completed post-project surveys — collecting these consistently will strengthen future impact reporting.`;
+}
+
+function renderFeedback(rows3) {
+  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
+  const el = document.getElementById('fb-enjoyed-only');
+  if (!el) return;
+  if (!fbRows.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';
+    return;
+  }
+  // Enjoyed comments — up to 4 recent, anonymous
+  const enjoyed = fbRows.map(r => v(r, FB.ENJOYED))
+    .filter(t => t.length > 15).slice(-4).reverse();
+  el.innerHTML = `<div class="quotes-grid">${
+    enjoyed.map(t => `<div class="quote-card">
+      <div class="quote-mark">"</div>
+      <div class="quote-text">${t}</div>
+    </div>`).join('')
+  }</div>`;
+}
+
+
+
+function setSurveyPanel(panel, btn) {
+  document.querySelectorAll('#toggle-org, #toggle-vol').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('panel-org').style.display = panel === 'org' ? 'block' : 'none';
+  document.getElementById('panel-vol').style.display = panel === 'vol' ? 'block' : 'none';
+  document.getElementById('survey-panel-title').textContent =
+    panel === 'org' ? 'Organisation impact' : 'Volunteer feedback';
+}
+
+function renderInlineFeedback(rows3) {
+  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
+  const el = document.getElementById('inline-fb-ratings');
+  if (!el) return;
+  if (!fbRows.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>';
+    return;
+  }
+  const ratingKeys = [
+    { col: FB.OVERALL,   label: 'Overall experience' },
+    { col: FB.CHARITY_Q, label: 'Charity choice' },
+    { col: FB.DATA,      label: 'Data & instructions' },
+    { col: FB.SUPPORT,   label: 'DCM support' },
+    { col: FB.LIVE,      label: 'Live event format' },
+  ];
+  el.innerHTML = `
+    <div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>
+    ${ratingKeys.map(({ col, label }) => {
+      const vals = fbRows.map(r => n(r, col)).filter(x => x > 0);
+      const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+      const rounded = Math.round(avg*10)/10;
+      const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
+      const fullStars = Math.round(avg);
+      const stars = Array.from({length:5},(_,i)=>
+        `<span style="font-size:16px;color:${i<fullStars?'#ef9f27':'#d3d1c7'}">★</span>`
+      ).join('');
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div>
+        <div style="display:flex;gap:3px;">${stars}</div>
+        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${display}/5</div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function renderOrgImpact(activeKey) {
+  const container = document.getElementById('survey-data');
+  const tabsEl = document.getElementById('survey-tabs');
+  if (!container || !surveyData) return;
+
+  const keys = Object.keys(surveyData);
+  const key = activeKey || keys[0];
+
+  // Render tabs
+  tabsEl.innerHTML = keys.map(k =>
+    `<button class="tab ${k===key?'active':''}" onclick="renderOrgImpact('${k}')">${surveyData[k].tab}</button>`
+  ).join('');
+
+  const cat = surveyData[key];
+  if (!cat) return;
+
+  const hasData = cat.questions.some(q => q.vals.length > 0);
+  if (!hasData) {
+    container.innerHTML = '<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No post-project survey data yet for this category.</div>';
+    return;
+  }
+
+  let html = '<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Average post-project scores (1–5)</div>';
+  cat.questions.forEach(q => {
+    if (!q.vals.length) {
+      html += `<div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:#888780;margin-bottom:4px;line-height:1.4;">${q.label}</div>
+        <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
+      </div>`;
+      return;
+    }
+    const avg = q.vals.reduce((a,b)=>a+b,0)/q.vals.length;
+    const rounded = Math.round(avg*10)/10;
+    const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
+    const fullStars = Math.round(avg);
+    const stars = Array.from({length:5},(_,i)=>
+      `<span style="font-size:14px;color:${i<fullStars?'#1d9e75':'#d3d1c7'}">★</span>`
+    ).join('');
+    html += `<div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;gap:2px;">${stars}</div>
+        <div style="font-size:12px;font-weight:500;color:#1d9e75;">${display}/5</div>
+        <div style="font-size:11px;color:#b4b2a9;">(${q.vals.length} response${q.vals.length>1?'s':''})</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function showSurvey(key, btn) { renderOrgImpact(key); }
+
+loadAll();
+</script>
+</body>
+</html>
