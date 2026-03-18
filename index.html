@@ -100,18 +100,14 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="refresh-btn" onclick="toggleDebug()" id="debug-btn" style="color:#b4b2a9;">🔍 Debug</button>
-      <button class="refresh-btn" onclick="loadAll()">
+<button class="refresh-btn" onclick="loadAll()">
         <span class="status-dot" id="status-dot"></span>
         <span id="refresh-label">Refresh data</span>
       </button>
     </div>
   </div>
 
-  <div id="debug-area" style="display:none;">
-    <div class="section-label">Debug — column mapping</div>
-    <div class="debug-panel" id="debug-panel">Loading...</div>
-  </div>
+
 
   <div id="error-area"></div>
   <div id="loading-area" class="loading">
@@ -288,17 +284,11 @@ const VOL_COLS = {
   TOOL:         'tool',
 };
 
-// ── Debug log ───────────────────────────────────────────────────────────────
+// ── Debug log (no-op) ────────────────────────────────────────────────────────
 let debugLines = [];
-function dlog(msg, cls='') { debugLines.push(`<span class="${cls}">${msg}</span>`); }
-function flushDebug() {
-  const el = document.getElementById('debug-panel');
-  if (el) el.innerHTML = debugLines.join('<br>');
-}
-function toggleDebug() {
-  const area = document.getElementById('debug-area');
-  area.style.display = area.style.display === 'none' ? 'block' : 'none';
-}
+function dlog() {}
+function flushDebug() {}
+function toggleDebug() {}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function sheetURL(id, tab) {
