@@ -39,22 +39,27 @@
   .chart-title { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
   .chart-sub { font-size: 11px; color: #b4b2a9; margin-bottom: 14px; }
 
-  .tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-  .tab { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
-  .tab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
-  .tab:hover { background: #f1efe8; }
-  .survey-section { min-height: 180px; }
-  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .bar-label { font-size: 11px; color: #888780; width: 130px; flex-shrink: 0; line-height: 1.3; }
-  .bar-track { flex: 1; background: #f1efe8; border-radius: 3px; height: 8px; }
-  .bar-fill { height: 8px; border-radius: 3px; transition: width 0.6s ease; }
-  .bar-val { font-size: 11px; color: #b4b2a9; width: 28px; text-align: right; }
+  /* Pre/post impact panel */
+  .impact-pair { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid #f1efe8; }
+  .impact-pair:last-child { border-bottom: none; }
+  .impact-label { font-size: 11px; color: #888780; flex: 1; line-height: 1.35; padding-top: 2px; }
+  .impact-scores { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .score-pre  { font-size: 12px; color: #1d9e75; font-weight: 600; background: #e1f5ee; border-radius: 4px; padding: 2px 6px; min-width: 26px; text-align: center; }
+  .score-post { font-size: 12px; color: #534ab7; font-weight: 600; background: #eeedfe; border-radius: 4px; padding: 2px 6px; min-width: 26px; text-align: center; }
+  .score-na   { font-size: 11px; color: #d3d1c7; padding: 2px 4px; }
+  .delta-pill { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 2px; border-radius: 99px; padding: 2px 7px; min-width: 42px; justify-content: center; }
+  .delta-up   { background: #e1f5ee; color: #0f6e56; }
+  .delta-dn   { background: #faece7; color: #993c1d; }
+  .delta-eq   { background: #f1efe8; color: #888780; }
+  .delta-nodata { background: #f1efe8; color: #c0beb7; font-size:10px; }
+  .impact-legend { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
 
   .quotes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
   .quote-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
   .quote-mark { font-size: 28px; line-height: 1; color: #1d9e75; font-weight: 500; margin-bottom: 4px; }
   .quote-text { font-size: 12px; color: #2c2c2a; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
-  .quote-org { font-size: 11px; color: #b4b2a9; font-weight: 500; }
+  .quote-org  { font-size: 11px; color: #b4b2a9; font-weight: 500; }
 
   .table-wrap { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; overflow-x: auto; }
   .projects-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
@@ -66,42 +71,30 @@
   .badge-multi { background: #eeedfe; color: #534ab7; }
   .badge-edu { background: #faeeda; color: #854f0b; }
   .badge-health { background: #faece7; color: #993c1d; }
-  .badge-beginner { background: #e6f1fb; color: #185fa5; }
-  .badge-intermediate { background: #eeedfe; color: #534ab7; }
-  .badge-advanced { background: #e1f5ee; color: #0f6e56; }
-  .stars { color: #ef9f27; font-size: 12px; }
 
   .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .vol-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
-  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .pill { font-size: 11px; padding: 3px 10px; border-radius: 99px; background: #f1efe8; color: #5f5e5a; border: 0.5px solid #e0deda; }
-  .pill-highlight { background: #e1f5ee; color: #0f6e56; border-color: #9fe1cb; }
 
   .insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
   .insight-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
-  .insight-num { font-size: 32px; font-weight: 500; color: #0f6e56; line-height: 1; }
+  .insight-num   { font-size: 32px; font-weight: 500; color: #0f6e56; line-height: 1; }
   .insight-label { font-size: 12px; color: #888780; margin-top: 4px; }
   .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
   .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
 
-  .fb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
-  .fb-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
-  .fb-rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .fb-rating-label { font-size: 12px; color: #888780; flex: 1; }
-  .fb-stars { display: flex; gap: 2px; }
-  .fb-star { font-size: 13px; }
-  .fb-score { font-size: 12px; font-weight: 500; color: #1d9e75; min-width: 28px; text-align: right; }
-  .fb-comment { font-size: 12px; color: #2c2c2a; font-style: italic; line-height: 1.6; padding: 10px 12px; background: #f9f8f6; border-radius: 8px; margin-bottom: 8px; }
-  .fb-comment-author { font-size: 11px; color: #b4b2a9; font-weight: 500; }
-  .fb-improve { font-size: 12px; color: #888780; line-height: 1.6; padding: 10px 12px; background: #f9f8f6; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #e0deda; }
-
   .footer { font-size: 11px; color: #b4b2a9; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid #e0deda; }
 
+  /* vol feedback inline */
+  #inline-fb-ratings { padding-top: 4px; }
+
+  /* survey toggle */
+  .survey-toggle { display: flex; gap: 4px; }
+  .stab { font-size: 11px; padding: 3px 10px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
+  .stab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
+  .stab:hover { background: #f1efe8; }
+
   @media (max-width: 700px) {
-    .charts-row { grid-template-columns: 1fr; }
-    .vol-charts-row { grid-template-columns: 1fr; }
-    .quotes-grid { grid-template-columns: 1fr; }
-    .insight-row { grid-template-columns: 1fr 1fr; }
+    .charts-row, .vol-charts-row, .quotes-grid, .insight-row { grid-template-columns: 1fr; }
     .header { flex-direction: column; align-items: flex-start; }
   }
 </style>
@@ -111,7 +104,7 @@
 
   <div class="header">
     <div style="display:flex; align-items:center; gap:16px;">
-      <img src="https://static.wixstatic.com/media/2608ce_4ffd1217cfad49bb950c7e852ea7dbc0~mv2.png/v1/crop/x_0,y_84,w_1280,h_857/fill/w_133,h_89,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/FullLogo_Transparent.png" alt="Data ChangeMakers" style="height:52px; width:auto; display:block;">
+      <img src="https://static.wixstatic.com/media/2608ce_4ffd1217cfad49bb950c7e852ea7dbc0~mv2.png/v1/crop/x_0,y_84,w_1280,h_857/fill/w_133,h_89,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/FullLogo_Transparent.png" alt="Data ChangeMakers" style="height:52px;width:auto;display:block;">
       <div>
         <h1>Data ChangeMakers</h1>
         <p id="subtitle">Impact dashboard — loading...</p>
@@ -135,33 +128,39 @@
     <div class="metric-grid" id="metric-grid"></div>
 
     <div class="charts-row">
+      <!-- Hours chart -->
       <div class="chart-card">
         <div class="chart-title">Hours by organisation</div>
         <div class="chart-sub">data visualisation projects only</div>
-        <div style="position: relative; width: 100%; height: 260px;">
+        <div style="position:relative;width:100%;height:260px;">
           <canvas id="hoursChart"></canvas>
         </div>
       </div>
-      <div class="chart-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-          <div class="chart-title" id="survey-panel-title">Volunteer feedback</div>
-          <div style="display:flex;gap:4px;">
-            <button id="toggle-vol" class="tab active" onclick="setSurveyPanel('vol',this)" style="font-size:11px;padding:3px 10px;">Volunteer feedback</button>
-            <button id="toggle-org" class="tab" onclick="setSurveyPanel('org',this)" style="font-size:11px;padding:3px 10px;">Organisation impact</button>
+
+      <!-- Pre/Post impact panel (+ volunteer feedback toggle) -->
+      <div class="chart-card" style="padding:1rem 1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div class="chart-title" id="survey-panel-title" style="margin:0;">Organisation impact</div>
+          <div class="survey-toggle">
+            <button class="stab active" id="stab-org" onclick="setSurveyPanel('org',this)">Organisation impact</button>
+            <button class="stab" id="stab-vol" onclick="setSurveyPanel('vol',this)">Volunteer feedback</button>
           </div>
         </div>
 
-        <!-- Volunteer feedback view — shown first -->
-        <div id="panel-vol" style="display:block;">
-          <div id="inline-fb-ratings" style="padding-top:4px;"></div>
+        <!-- Org impact: pre/post pairs -->
+        <div id="panel-org">
+          <div class="impact-legend">
+            <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
+            <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
+            <span><span style="font-size:11px;color:#0f6e56;font-weight:700;">↑</span><span style="font-size:11px;color:#888780;"> Change</span></span>
+          </div>
+          <div id="impact-pairs"></div>
         </div>
 
-        <!-- Org survey view -->
-        <div id="panel-org" style="display:none;">
-          <div class="tabs" id="survey-tabs" style="margin-bottom:10px;"></div>
-          <div id="survey-data" class="survey-section"></div>
+        <!-- Volunteer feedback ratings -->
+        <div id="panel-vol" style="display:none;">
+          <div id="inline-fb-ratings"></div>
         </div>
-
       </div>
     </div>
 
@@ -192,23 +191,17 @@
       <div class="chart-card">
         <div class="chart-title">Data skill level</div>
         <div class="chart-sub">self-reported by volunteers</div>
-        <div style="position: relative; width: 100%; height: 200px;">
-          <canvas id="skillChart"></canvas>
-        </div>
+        <div style="position:relative;width:100%;height:200px;"><canvas id="skillChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Tools used</div>
         <div class="chart-sub">across all submissions</div>
-        <div style="position: relative; width: 100%; height: 200px;">
-          <canvas id="toolChart"></canvas>
-        </div>
+        <div style="position:relative;width:100%;height:200px;"><canvas id="toolChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Top countries</div>
         <div class="chart-sub">volunteer locations</div>
-        <div style="position: relative; width: 100%; height: 200px;">
-          <canvas id="countryChart"></canvas>
-        </div>
+        <div style="position:relative;width:100%;height:200px;"><canvas id="countryChart"></canvas></div>
       </div>
     </div>
 
@@ -223,9 +216,7 @@
       <div class="chart-card">
         <div class="chart-title">First-time participants</div>
         <div class="chart-sub">new vs returning volunteers</div>
-        <div style="position: relative; width: 100%; height: 180px;">
-          <canvas id="firstTimeChart"></canvas>
-        </div>
+        <div style="position:relative;width:100%;height:180px;"><canvas id="firstTimeChart"></canvas></div>
       </div>
     </div>
 
@@ -242,48 +233,49 @@
   </div>
 
 </div>
-
 <script>
-const API_KEY      = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
-const SHEET1_ID    = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
-const SHEET1_TAB   = 'Project Impact';
-const SHEET2_ID    = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
-const SHEET2_TAB   = 'All Submissions';
-const SHEET3_ID    = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
-const SHEET3_TAB   = 'Feedback';
-const FB = { PROJECT:2, FNAME:3, LNAME:4, OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12, IMPROVED:13 };
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const API_KEY   = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
+const SHEET1_ID = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
+const SHEET1_TAB= 'Project Impact';
+const SHEET2_ID = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
+const SHEET2_TAB= 'All Submissions';
+const SHEET3_ID = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
+const SHEET3_TAB= 'Feedback';
 
+const FB = { PROJECT:2,FNAME:3,LNAME:4,OVERALL:7,CHARITY_Q:8,DATA:9,SUPPORT:10,LIVE:11,ENJOYED:12,IMPROVED:13 };
+
+// Sheet1 cols (1-based)
 const COL = {
-  PROJECT_ID:1, DATE:2, CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6,
-  HOURS_SUPPORT:7, STUDENTS:12, GRAND_TOTAL:14,
-  PRE_DATA:15, POST_DATA:16, PRE_LITERACY:17, POST_LITERACY:18,
-  PRE_TOOLS:19, POST_SUPPORT:20, PRE_IMPACT:21, POST_IMPACT:22,
+  PROJECT_ID:1,DATE:2,CHARITY:3,TYPE:4,VOLS_PROJECT:5,HOURS_PROJECT:6,
+  HOURS_SUPPORT:7,STUDENTS:12,GRAND_TOTAL:14,
+  // Pre cols (green) — O=15, Q=17, S=19, U=21, W=23
+  // Post cols (purple) — P=16, R=18, T=20, V=22, X=24
+  PRE_DATA:15, POST_DATA:16,
+  PRE_LITERACY:17, POST_LITERACY:18,
+  PRE_TOOLS:19, POST_TOOLS:20,
+  PRE_IMPACT:21, POST_IMPACT:22,
   PRE_DECISIONS:23, POST_DECISIONS:24,
-  POST_DCM_QUALITY:27, POST_PARTNER_AGAIN:28,
-  POST_PROGRAMS:30, POST_MEASURE:31,
-  OVERALL_SAT:33, LIKELY_RECOMMEND:34, QUOTES:35,
+  POST_DCM_QUALITY:27,POST_PARTNER_AGAIN:28,
+  POST_PROGRAMS:30,POST_MEASURE:31,
+  OVERALL_SAT:33,LIKELY_RECOMMEND:34,QUOTES:35,
 };
 
-const VOL = {
-  CHARITY:4, PROJECT_TYPE:8, SKILL:9, COUNTRY:10, CITY:11,
-  HOURS:12, FIRST_TIME:13, TOOL:14,
-};
+const VOL = { CHARITY:4,PROJECT_TYPE:8,SKILL:9,COUNTRY:10,CITY:11,HOURS:12,FIRST_TIME:13,TOOL:14 };
 
 let charts = {};
-let surveyData = {};
 
 function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
-function n(row, col) { const val = parseFloat(v(row, col).replace(/[$,]/g, "")); return isNaN(val) ? null : val; }
+function n(row, col) { const val = parseFloat(v(row, col).replace(/[$,]/g,'')); return isNaN(val)?null:val; }
 
 function sheetURL(id, tab) {
   return `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
 }
-
-async function fetchSheet(id, tab, skipRows = 1) {
+async function fetchSheet(id, tab, skip=1) {
   const res = await fetch(sheetURL(id, tab));
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Fetch failed'); }
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message||'Fetch failed'); }
   const json = await res.json();
-  return (json.values || []).slice(skipRows).filter(r => r.some(c => String(c).trim() !== ""));
+  return (json.values||[]).slice(skip).filter(r=>r.some(c=>String(c).trim()!==''));
 }
 
 const CITY_GEO = {
@@ -308,168 +300,187 @@ const CITY_GEO = {
   'vijayanagara':[15.34,76.46],'vijayanagara, karnataka':[15.34,76.46],
 };
 
-let citiesMap = null;
-let citiesMarkerLayer = null;
+let citiesMap = null, citiesMarkerLayer = null;
 
 function renderCitiesMap(topCities) {
   const el = document.getElementById('cities-map');
   if (!el || typeof L === 'undefined') return;
-
   if (!citiesMap) {
-    citiesMap = L.map('cities-map', { zoomControl: true, scrollWheelZoom: false }).setView([20,10],2);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap', maxZoom: 19
-    }).addTo(citiesMap);
+    citiesMap = L.map('cities-map', {zoomControl:true, scrollWheelZoom:false}).setView([20,10],2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(citiesMap);
     citiesMarkerLayer = L.layerGroup().addTo(citiesMap);
   }
   citiesMarkerLayer.clearLayers();
-
   const plotted = [];
   topCities.forEach(([city, count, data]) => {
     const coords = CITY_GEO[city.toLowerCase()];
     if (!coords) return;
-    const size = Math.min(8 + count * 4, 28);
+    const sz = Math.min(8+count*4,28);
     const icon = L.divIcon({
-      className: '',
-      html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${count>1?9:0}px;font-weight:700;">${count>1?count:''}</div>`,
-      iconSize:[size,size], iconAnchor:[size/2,size/2],
+      className:'',
+      html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${count>1?9:0}px;font-weight:700;">${count>1?count:''}</div>`,
+      iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],
     });
-
-    const country = data ? data.country : '';
-    const volEntries = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]) : [];
-    const volRows_html = volEntries.map(([name, subs]) =>
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px;">
-        <span>${name}</span>
-        <span style="color:#1D9E75;font-weight:700;margin-left:12px;">${subs} sub${subs>1?'s':''}</span>
-      </div>`
-    ).join('');
-
+    const volRows_html = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]).map(([name,subs])=>
+      `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px;">
+        <span>${name}</span><span style="color:#1D9E75;font-weight:700;margin-left:12px;">${subs} sub${subs>1?'s':''}</span>
+      </div>`).join('') : '';
     const popup = `<div style="font-family:sans-serif;min-width:180px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${city}</div>
-      ${country ? `<div style="font-size:11px;color:#888;margin-bottom:8px;">${country}</div>` : ''}
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#b4b2a9;margin-bottom:6px;">${count} volunteer${count>1?'s':''}</div>
+      ${data?.country?`<div style="font-size:11px;color:#888;margin-bottom:8px;">${data.country}</div>`:''}
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b4b2a9;margin-bottom:6px;">${count} volunteer${count>1?'s':''}</div>
       ${volRows_html}
     </div>`;
-
-    L.marker(coords, {icon}).bindPopup(popup, {maxWidth: 240}).addTo(citiesMarkerLayer);
+    L.marker(coords,{icon}).bindPopup(popup,{maxWidth:240}).addTo(citiesMarkerLayer);
     plotted.push(coords);
   });
-
-  const countEl = document.getElementById('cities-map-count');
-  if (countEl) countEl.textContent = `${plotted.length} cities mapped`;
-
-  setTimeout(() => {
+  document.getElementById('cities-map-count').textContent = `${plotted.length} cities mapped`;
+  setTimeout(()=>{
     citiesMap.invalidateSize();
-    if (plotted.length > 0) {
-      citiesMap.fitBounds(L.latLngBounds(plotted), { padding:[20,20], maxZoom:4 });
-    }
-  }, 200);
+    if (plotted.length>0) citiesMap.fitBounds(L.latLngBounds(plotted),{padding:[20,20],maxZoom:4});
+  },200);
 }
 
 async function loadAll() {
   const dot = document.getElementById('status-dot');
-  const label = document.getElementById('refresh-label');
+  const lbl = document.getElementById('refresh-label');
   dot.classList.remove('live');
-  label.textContent = 'Loading...';
+  lbl.textContent = 'Loading...';
   document.getElementById('error-area').innerHTML = '';
   document.getElementById('loading-area').style.display = 'block';
   document.getElementById('dashboard').style.display = 'none';
-
   try {
-    const [rows1, rows2, rows3] = await Promise.all([
-      fetchSheet(SHEET1_ID, SHEET1_TAB, 1),
-      fetchSheet(SHEET2_ID, SHEET2_TAB, 1),
-      fetchSheet(SHEET3_ID, SHEET3_TAB, 1),
+    const [rows1,rows2,rows3] = await Promise.all([
+      fetchSheet(SHEET1_ID,SHEET1_TAB,1),
+      fetchSheet(SHEET2_ID,SHEET2_TAB,1),
+      fetchSheet(SHEET3_ID,SHEET3_TAB,1),
     ]);
-    renderDashboard(rows1, rows2, rows3);
+    renderDashboard(rows1,rows2,rows3);
     dot.classList.add('live');
-    label.textContent = 'Refresh data';
-    document.getElementById('last-updated').textContent =
-      new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' });
+    lbl.textContent = 'Refresh data';
+    document.getElementById('last-updated').textContent = new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
     document.getElementById('loading-area').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
   } catch(err) {
     document.getElementById('loading-area').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('error-area').innerHTML =
-      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>
-      Make sure both sheets are shared as "Anyone with the link can view".</div>`;
-    label.textContent = 'Retry';
+      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>Make sure both sheets are shared as "Anyone with the link can view".</div>`;
+    lbl.textContent = 'Retry';
   }
 }
 
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
-
 function countBy(arr) {
-  return arr.reduce((acc, val) => {
-    if (!val || val === '—' || val === '') return acc;
-    acc[val] = (acc[val] || 0) + 1;
-    return acc;
-  }, {});
+  return arr.reduce((acc,val)=>{ if(!val||val==='—'||val==='')return acc; acc[val]=(acc[val]||0)+1; return acc; },{});
 }
-
-function topN(obj, n) {
-  return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
-}
-
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-}
+function topN(obj,n) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
 
 function mergeOrgs(rows) {
-  return rows.map(row => {
-    const raw = v(row, COL.CHARITY).replace(/[Cc]ollorado/g, 'Colorado').trim();
-    const type = v(row, COL.TYPE).toLowerCase();
-    const rowHours = n(row, COL.GRAND_TOTAL) || n(row, COL.HOURS_PROJECT) || 0;
-    const sat = n(row, COL.OVERALL_SAT);
-    const rec = n(row, COL.LIKELY_RECOMMEND);
-    const q = v(row, COL.QUOTES);
+  return rows.map(row=>{
+    const raw = v(row,COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
+    const type = v(row,COL.TYPE).toLowerCase();
+    const rowHours = n(row,COL.GRAND_TOTAL)||n(row,COL.HOURS_PROJECT)||0;
+    const sat = n(row,COL.OVERALL_SAT);
+    const rec = n(row,COL.LIKELY_RECOMMEND);
+    const q   = v(row,COL.QUOTES);
     const isViz = type.includes('visuali');
     return {
-      name: raw,
-      types: new Set([type]),
-      vols: n(row, COL.VOLS_PROJECT) || 0,
-      hours: rowHours,
-      vizHours: isViz ? rowHours : 0,
-      students: n(row, COL.STUDENTS) || 0,
-      sat: sat ? [sat] : [],
-      recommend: rec ? [rec] : [],
-      quotes: q ? [{ text: q, org: raw }] : [],
-      surveyRows: [row],
+      name:raw, types:new Set([type]), vols:n(row,COL.VOLS_PROJECT)||0,
+      hours:rowHours, vizHours:isViz?rowHours:0, students:n(row,COL.STUDENTS)||0,
+      sat:sat?[sat]:[], recommend:rec?[rec]:[], quotes:q?[{text:q,org:raw}]:[],
+      surveyRows:[row],
     };
-  }).filter(o => o.name);
+  }).filter(o=>o.name);
 }
 
 function getTypeInfo(types) {
-  const arr = [...types];
-  if (arr.length > 1) return { label: 'Multiple', badge: 'badge-multi' };
-  const t = arr[0] || '';
-  if (t.includes('visuali')) return { label: 'Data viz', badge: 'badge-viz' };
-  if (t.includes('wrangle')) return { label: 'Data wrangling', badge: 'badge-multi' };
-  if (t.includes('learn') || t.includes('educat')) return { label: 'Learning', badge: 'badge-edu' };
-  if (t.includes('health')) return { label: 'Health check', badge: 'badge-health' };
-  return { label: t || '—', badge: 'badge-viz' };
+  const arr=[...types];
+  if(arr.length>1) return {label:'Multiple',badge:'badge-multi'};
+  const t=arr[0]||'';
+  if(t.includes('visuali')) return {label:'Data viz',badge:'badge-viz'};
+  if(t.includes('wrangle')) return {label:'Data wrangling',badge:'badge-multi'};
+  if(t.includes('learn')||t.includes('educat')) return {label:'Learning',badge:'badge-edu'};
+  if(t.includes('health')) return {label:'Health check',badge:'badge-health'};
+  return {label:t||'—',badge:'badge-viz'};
 }
 
-function renderDashboard(rows1, rows2, rows3) {
-  const orgs = mergeOrgs(rows1.filter(r => v(r, COL.CHARITY).length > 1 && !/noise solution/i.test(v(r, COL.CHARITY))));
+// ── Pre/Post pairs definition ─────────────────────────────────────────────────
+const PRE_POST_PAIRS = [
+  { label:'Confident discussing & using data internally', pre:COL.PRE_DATA,      post:COL.POST_DATA },
+  { label:'Overall data literacy is strong',              pre:COL.PRE_LITERACY,  post:COL.POST_LITERACY },
+  { label:'Tools & systems to manage data effectively',   pre:COL.PRE_TOOLS,     post:COL.POST_TOOLS },
+  { label:'Confidence demonstrating impact to funders',   pre:COL.PRE_IMPACT,    post:COL.POST_IMPACT },
+  { label:'Making decisions based on data',               pre:COL.PRE_DECISIONS, post:COL.POST_DECISIONS },
+];
 
-  const uniqueOrgCount = new Set(orgs.map(o => o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
+function fmt(v) { return v!==null ? (v%1===0?v:v.toFixed(1)) : null; }
+
+function renderImpactPairs(orgs) {
+  const el = document.getElementById('impact-pairs');
+  if (!el) return;
+
+  const rows = PRE_POST_PAIRS.map(pair => {
+    const preVals=[], postVals=[];
+    orgs.forEach(o => o.surveyRows.forEach(row=>{
+      const p=n(row,pair.pre), q=n(row,pair.post);
+      if(p) preVals.push(p);
+      if(q) postVals.push(q);
+    }));
+    const preAvg  = preVals.length  ? avg(preVals)  : null;
+    const postAvg = postVals.length ? avg(postVals) : null;
+    const delta   = (preAvg!==null && postAvg!==null) ? postAvg-preAvg : null;
+    return {label:pair.label, preAvg, postAvg, delta, preN:preVals.length, postN:postVals.length};
+  });
+
+  el.innerHTML = rows.map(r => {
+    // Delta pill
+    let pillHtml;
+    if (r.delta===null) {
+      pillHtml = `<span class="delta-pill delta-nodata">—</span>`;
+    } else {
+      const sign = r.delta>0?'+':r.delta<0?'':' ';
+      const cls  = r.delta>0?'delta-up':r.delta<0?'delta-dn':'delta-eq';
+      const arrow= r.delta>0?'↑':r.delta<0?'↓':'→';
+      pillHtml = `<span class="delta-pill ${cls}">${arrow} ${sign}${fmt(r.delta)}</span>`;
+    }
+
+    const preStr  = r.preAvg!==null  ? fmt(r.preAvg)  : null;
+    const postStr = r.postAvg!==null ? fmt(r.postAvg) : null;
+
+    return `<div class="impact-pair">
+      <div class="impact-label">${r.label}</div>
+      <div class="impact-scores">
+        ${preStr  ? `<span class="score-pre">${preStr}</span>` : `<span class="score-na">—</span>`}
+        <span style="font-size:10px;color:#d3d1c7;">→</span>
+        ${postStr ? `<span class="score-post">${postStr}</span>` : `<span class="score-na">—</span>`}
+        ${pillHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Main render ────────────────────────────────────────────────────────────────
+function renderDashboard(rows1, rows2, rows3) {
+  const orgs = mergeOrgs(rows1.filter(r=>v(r,COL.CHARITY).length>1));
+  const uniqueOrgCount = new Set(orgs.map(o=>o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
   document.getElementById('subtitle').textContent =
     `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${rows2.length} volunteer submissions`;
 
   const totalHours = orgs.reduce((s,o)=>s+o.hours,0);
   const totalVols  = orgs.reduce((s,o)=>s+o.vols,0);
-  const totalStudents = orgs.reduce((s,o)=>s+o.students,0);
   const allSat = orgs.flatMap(o=>o.sat);
   const avgSat = avg(allSat);
-  const avgHoursPerProject = orgs.length ? Math.round(totalHours / orgs.length) : 0;
+  const avgHrsPerProj = orgs.length ? Math.round(totalHours/orgs.length) : 0;
+  const fbAllRows = (rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const fbOverallVals = fbAllRows.map(r=>n(r,FB.OVERALL)).filter(x=>x>0);
+  const volOverallAvg = fbOverallVals.length ? (Math.round(fbOverallVals.reduce((a,b)=>a+b,0)/fbOverallVals.length*10)/10).toFixed(1) : null;
 
-  const fbAllRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
-  const fbOverallVals = fbAllRows.map(r => n(r, FB.OVERALL)).filter(x => x > 0);
-  const volOverallAvg = fbOverallVals.length
-    ? (Math.round(fbOverallVals.reduce((a,b)=>a+b,0)/fbOverallVals.length * 10) / 10).toFixed(1)
-    : null;
+  function starHtml(val, color) {
+    const f=Math.round(val);
+    return Array.from({length:5},(_,i)=>`<span style="color:${i<f?color:'#d3d1c7'};font-size:16px;">★</span>`).join('');
+  }
 
   document.getElementById('metric-grid').innerHTML = `
     <div class="metric metric-accent">
@@ -489,13 +500,13 @@ function renderDashboard(rows1, rows2, rows3) {
     </div>
     <div class="metric">
       <div class="metric-label">Avg hours / project</div>
-      <div class="metric-value">${avgHoursPerProject}</div>
+      <div class="metric-value">${avgHrsPerProj}</div>
       <div class="metric-sub">volunteer hours avg</div>
     </div>
     ${avgSat ? `<div class="metric">
       <div class="metric-label">Organisation feedback</div>
       <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <span>${Array.from({length:5},(_,i)=>'<span style="color:'+(i<Math.round(avgSat)?'#ef9f27':'#d3d1c7')+';font-size:16px;">★</span>').join('')}</span>
+        ${starHtml(avgSat,'#ef9f27')}
         <span style="font-size:13px;font-weight:400;color:#888780;">${avgSat%1===0?avgSat:avgSat.toFixed(1)}/5</span>
       </div>
       <div class="metric-sub">post-project survey avg</div>
@@ -503,24 +514,25 @@ function renderDashboard(rows1, rows2, rows3) {
     ${volOverallAvg ? `<div class="metric">
       <div class="metric-label">Volunteer overall exp.</div>
       <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <span>${Array.from({length:5},(_,i)=>'<span style="color:'+(i<Math.round(parseFloat(volOverallAvg))?'#ef9f27':'#d3d1c7')+';font-size:16px;">★</span>').join('')}</span>
+        ${starHtml(parseFloat(volOverallAvg),'#ef9f27')}
         <span style="font-size:13px;font-weight:400;color:#888780;">${parseFloat(volOverallAvg)%1===0?parseInt(volOverallAvg):volOverallAvg}/5</span>
       </div>
       <div class="metric-sub">volunteer feedback avg</div>
     </div>` : ''}
   `;
 
+  // Hours chart
   const vizOrgs = orgs.filter(o=>o.vizHours>0);
   destroyChart('hours');
   charts.hours = new Chart(document.getElementById('hoursChart'), {
-    type: 'bar',
-    data: {
-      labels: vizOrgs.map(o=>o.name.length>14?o.name.slice(0,13)+'…':o.name),
-      datasets: [{ data: vizOrgs.map(o=>o.vizHours), backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false }]
+    type:'bar',
+    data:{
+      labels:vizOrgs.map(o=>o.name.length>14?o.name.slice(0,13)+'…':o.name),
+      datasets:[{data:vizOrgs.map(o=>o.vizHours),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]
     },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}} },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}}},
       scales:{
         x:{ticks:{font:{size:10},maxRotation:45,autoSkip:false},grid:{display:false}},
         y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
@@ -528,63 +540,12 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  const surveyCategories = [
-    {
-      key: 'data', tab: 'Data',
-      questions: [
-        { col: COL.POST_DATA,    label: 'More confident discussing and using data internally' },
-        { col: COL.POST_SUPPORT, label: 'Data support from DCM was valuable' },
-      ]
-    },
-    {
-      key: 'literacy', tab: 'Literacy',
-      questions: [
-        { col: COL.POST_LITERACY, label: 'Improved data literacy and confidence with data' },
-      ]
-    },
-    {
-      key: 'impact', tab: 'Impact',
-      questions: [
-        { col: COL.POST_IMPACT,   label: 'Increased confidence demonstrating impact to funders' },
-        { col: COL.POST_PROGRAMS, label: 'Dashboards improved ability to deliver better programs' },
-        { col: COL.POST_MEASURE,  label: 'Better able to measure and share results with stakeholders' },
-      ]
-    },
-    {
-      key: 'decisions', tab: 'Decisions',
-      questions: [
-        { col: COL.POST_DECISIONS, label: 'Better decisions using data' },
-      ]
-    },
-    {
-      key: 'dcm', tab: 'DCM',
-      questions: [
-        { col: COL.POST_DCM_QUALITY,   label: 'Satisfied with quality of DCM support and contributions' },
-        { col: COL.POST_PARTNER_AGAIN, label: 'Likely to partner with Data ChangeMakers again' },
-        { col: COL.OVERALL_SAT,        label: 'Overall satisfaction with the project' },
-        { col: COL.LIKELY_RECOMMEND,   label: 'Likely to recommend DCM to another nonprofit' },
-      ]
-    },
-  ];
+  // Pre/post impact pairs
+  renderImpactPairs(orgs);
 
-  surveyData = {};
-  surveyCategories.forEach(cat => {
-    const questionsWithVals = cat.questions.map(q => {
-      const vals = [];
-      orgs.forEach(org => {
-        org.surveyRows.forEach(row => {
-          const val = n(row, q.col);
-          if (val) vals.push(val);
-        });
-      });
-      return { label: q.label, vals };
-    });
-    surveyData[cat.key] = { tab: cat.tab, questions: questionsWithVals };
-  });
-  renderOrgImpact('data');
-
+  // Quotes
   const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
-  document.getElementById('quotes-grid').innerHTML = allQuotes.map(q => {
+  document.getElementById('quotes-grid').innerHTML = allQuotes.map(q=>{
     const sentences = q.text.split(/[.!?][""]?\s+/);
     const display = sentences[0].length>30 ? sentences[0] : sentences.slice(0,2).join('. ');
     const clean = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
@@ -595,8 +556,9 @@ function renderDashboard(rows1, rows2, rows3) {
     </div>`;
   }).join('');
 
-  document.getElementById('proj-tbody').innerHTML = orgs.map(o => {
-    const {label,badge} = getTypeInfo(o.types);
+  // Org table
+  document.getElementById('proj-tbody').innerHTML = orgs.map(o=>{
+    const {label,badge}=getTypeInfo(o.types);
     return `<tr>
       <td style="font-weight:500;">${o.name}</td>
       <td><span class="badge ${badge}">${label}</span></td>
@@ -606,16 +568,16 @@ function renderDashboard(rows1, rows2, rows3) {
     </tr>`;
   }).join('');
 
-  const volRows = rows2.filter(r => v(r, VOL.SKILL) || v(r, VOL.COUNTRY) || v(r, VOL.TOOL));
-  const skills    = volRows.map(r => v(r, VOL.SKILL)).filter(Boolean);
-  const countries = volRows.map(r => v(r, VOL.COUNTRY)).filter(Boolean);
-  const cities    = volRows.map(r => v(r, VOL.CITY)).filter(Boolean);
-  const tools     = volRows.flatMap(r => v(r, VOL.TOOL).split(/[,;/]/).map(t=>t.trim())).filter(Boolean);
-  const firstTime = volRows.map(r => v(r, VOL.FIRST_TIME)).filter(Boolean);
-
+  // ── Volunteer section ──────────────────────────────────────────────────────
+  const volRows = rows2.filter(r=>v(r,VOL.SKILL)||v(r,VOL.COUNTRY)||v(r,VOL.TOOL));
+  const skills    = volRows.map(r=>v(r,VOL.SKILL)).filter(Boolean);
+  const countries = volRows.map(r=>v(r,VOL.COUNTRY)).filter(Boolean);
+  const cities    = volRows.map(r=>v(r,VOL.CITY)).filter(Boolean);
+  const tools     = volRows.flatMap(r=>v(r,VOL.TOOL).split(/[,;/]/).map(t=>t.trim())).filter(Boolean);
+  const firstTime = volRows.map(r=>v(r,VOL.FIRST_TIME)).filter(Boolean);
   const uniqueCountries = new Set(countries).size;
   const uniqueCities    = new Set(cities).size;
-  const firstTimers     = firstTime.filter(f => /yes|y|true|1/i.test(f)).length;
+  const firstTimers     = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
 
   document.getElementById('vol-stat-row').innerHTML = `
@@ -643,110 +605,78 @@ function renderDashboard(rows1, rows2, rows3) {
 
   const skillCounts = countBy(skills);
   const skillOrder  = ['Beginner','Intermediate','Advanced','Expert'];
-  const skillLabels = skillOrder.filter(s => skillCounts[s]);
-  const skillVals   = skillLabels.map(s => skillCounts[s]||0);
-  const skillColors = ['#378ADD','#534AB7','#1D9E75','#0F6E56'];
-
+  const skillLabels = skillOrder.filter(s=>skillCounts[s]);
+  const skillVals   = skillLabels.map(s=>skillCounts[s]||0);
   destroyChart('skill');
-  charts.skill = new Chart(document.getElementById('skillChart'), {
-    type: 'bar',
-    data: {
-      labels: skillLabels.length ? skillLabels : Object.keys(skillCounts),
-      datasets: [{ data: skillLabels.length ? skillVals : Object.values(skillCounts),
-        backgroundColor: skillColors, borderRadius:4, borderSkipped:false }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}} },
-      scales:{
-        x:{ticks:{font:{size:10}},grid:{display:false}},
-        y:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}}
-      }
-    }
+  charts.skill = new Chart(document.getElementById('skillChart'),{
+    type:'bar',
+    data:{labels:skillLabels.length?skillLabels:Object.keys(skillCounts),
+      datasets:[{data:skillLabels.length?skillVals:Object.values(skillCounts),
+        backgroundColor:['#378ADD','#534AB7','#1D9E75','#0F6E56'],borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}}},
+      scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}}}}
   });
 
   const toolCounts = countBy(tools);
-  const topTools   = topN(toolCounts, 6);
+  const topTools   = topN(toolCounts,6);
   destroyChart('tool');
-  charts.tool = new Chart(document.getElementById('toolChart'), {
-    type: 'bar',
-    data: {
-      labels: topTools.map(([t])=>t.length>12?t.slice(0,11)+'…':t),
-      datasets: [{ data: topTools.map(([,c])=>c),
-        backgroundColor:'#534AB7', borderRadius:4, borderSkipped:false }]
-    },
-    options: {
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' uses'}} },
-      scales:{
-        x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
-        y:{ticks:{font:{size:10}},grid:{display:false}}
-      }
-    }
+  charts.tool = new Chart(document.getElementById('toolChart'),{
+    type:'bar',
+    data:{labels:topTools.map(([t])=>t.length>12?t.slice(0,11)+'…':t),
+      datasets:[{data:topTools.map(([,c])=>c),backgroundColor:'#534AB7',borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' uses'}}},
+      scales:{x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
   });
 
   const countryCounts = countBy(countries);
-  const topCountries  = topN(countryCounts, 6);
+  const topCountries  = topN(countryCounts,6);
   destroyChart('country');
-  charts.country = new Chart(document.getElementById('countryChart'), {
-    type: 'bar',
-    data: {
-      labels: topCountries.map(([c])=>c.length>14?c.slice(0,13)+'…':c),
-      datasets: [{ data: topCountries.map(([,n])=>n),
-        backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false }]
-    },
-    options: {
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}} },
-      scales:{
-        x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},
-        y:{ticks:{font:{size:10}},grid:{display:false}}
-      }
-    }
+  charts.country = new Chart(document.getElementById('countryChart'),{
+    type:'bar',
+    data:{labels:topCountries.map(([c])=>c.length>14?c.slice(0,13)+'…':c),
+      datasets:[{data:topCountries.map(([,n])=>n),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}}},
+      scales:{x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
   });
 
+  // Cities map
   const cityVolMap = {};
-  volRows.forEach(r => {
-    const city = v(r, VOL.CITY);
-    if (!city) return;
-    const name = ((r[4]||'') + ' ' + (r[5]||'')).trim() || 'Volunteer';
-    const country = v(r, VOL.COUNTRY);
-    if (!cityVolMap[city]) cityVolMap[city] = { country, volunteers: {} };
-    cityVolMap[city].volunteers[name] = (cityVolMap[city].volunteers[name] || 0) + 1;
+  volRows.forEach(r=>{
+    const city=v(r,VOL.CITY); if(!city) return;
+    const name=((r[4]||'')+' '+(r[5]||'')).trim()||'Volunteer';
+    const country=v(r,VOL.COUNTRY);
+    if(!cityVolMap[city]) cityVolMap[city]={country,volunteers:{}};
+    cityVolMap[city].volunteers[name]=(cityVolMap[city].volunteers[name]||0)+1;
   });
   const topCities = Object.entries(cityVolMap)
-    .map(([city, data]) => [city, Object.keys(data.volunteers).length, data])
-    .sort((a,b) => b[1]-a[1]);
-
+    .map(([city,data])=>[city,Object.keys(data.volunteers).length,data])
+    .sort((a,b)=>b[1]-a[1]);
   renderCitiesMap(topCities);
 
-  const ftYes = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
-  const ftNo  = firstTime.length - ftYes;
+  const ftYes=firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
+  const ftNo=firstTime.length-ftYes;
   destroyChart('firstTime');
-  charts.firstTime = new Chart(document.getElementById('firstTimeChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['First time','Returning'],
-      datasets: [{ data:[ftYes,ftNo], backgroundColor:['#1D9E75','#D3D1C7'], borderWidth:2, borderColor:'#fff' }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{ position:'bottom', labels:{font:{size:11},padding:12,boxWidth:10} },
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/firstTime.length*100)}%)`}}
-      }
-    }
+  charts.firstTime = new Chart(document.getElementById('firstTimeChart'),{
+    type:'doughnut',
+    data:{labels:['First time','Returning'],datasets:[{data:[ftYes,ftNo],backgroundColor:['#1D9E75','#D3D1C7'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12,boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/firstTime.length*100)}%)`}}}}
   });
 
+  // Feedback
+  renderFeedback(rows3);
+  renderInlineFeedback(rows3);
+
+  // Insights
   const largestOrg = orgs.reduce((a,b)=>a.hours>b.hours?a:b);
   const largestPct = Math.round(largestOrg.hours/totalHours*100);
   const completedSurveys = orgs.filter(o=>o.sat.length>0).length;
-  const topSkill = topN(skillCounts,1)[0];
   const topTool  = topN(toolCounts,1)[0];
-
-  renderFeedback(rows3);
-  renderInlineFeedback(rows3);
-  setSurveyPanel('vol', document.getElementById('toggle-vol'));
+  const topSkill = topN(skillCounts,1)[0];
 
   document.getElementById('insight-row').innerHTML = `
     <div class="insight-card">
@@ -774,114 +704,51 @@ function renderDashboard(rows1, rows2, rows3) {
 }
 
 function renderFeedback(rows3) {
-  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
-  const el = document.getElementById('fb-enjoyed-only');
-  if (!el) return;
-  if (!fbRows.length) {
-    el.innerHTML = '<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';
-    return;
-  }
-  const enjoyed = fbRows.map(r => v(r, FB.ENJOYED))
-    .filter(t => t.length > 15).slice(-4).reverse();
-  el.innerHTML = `<div class="quotes-grid">${
-    enjoyed.map(t => `<div class="quote-card">
-      <div class="quote-mark">"</div>
-      <div class="quote-text">${t}</div>
-    </div>`).join('')
+  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const el=document.getElementById('fb-enjoyed-only');
+  if(!el) return;
+  if(!fbRows.length){el.innerHTML='<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';return;}
+  const enjoyed=fbRows.map(r=>v(r,FB.ENJOYED)).filter(t=>t.length>15).slice(-4).reverse();
+  el.innerHTML=`<div class="quotes-grid">${
+    enjoyed.map(t=>`<div class="quote-card"><div class="quote-mark">"</div><div class="quote-text">${t}</div></div>`).join('')
   }</div>`;
 }
 
 function setSurveyPanel(panel, btn) {
-  document.querySelectorAll('#toggle-org, #toggle-vol').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  document.getElementById('panel-vol').style.display = panel === 'vol' ? 'block' : 'none';
-  document.getElementById('panel-org').style.display = panel === 'org' ? 'block' : 'none';
-  document.getElementById('survey-panel-title').textContent =
-    panel === 'vol' ? 'Volunteer feedback' : 'Organisation impact';
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('panel-org').style.display = panel==='org'?'block':'none';
+  document.getElementById('panel-vol').style.display = panel==='vol'?'block':'none';
+  document.getElementById('survey-panel-title').textContent = panel==='org'?'Organisation impact':'Volunteer feedback';
 }
 
 function renderInlineFeedback(rows3) {
-  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
-  const el = document.getElementById('inline-fb-ratings');
-  if (!el) return;
-  if (!fbRows.length) {
-    el.innerHTML = '<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>';
-    return;
-  }
-  const ratingKeys = [
-    { col: FB.OVERALL,   label: 'Overall experience' },
-    { col: FB.CHARITY_Q, label: 'Charity choice' },
-    { col: FB.DATA,      label: 'Data & instructions' },
-    { col: FB.SUPPORT,   label: 'DCM support' },
-    { col: FB.LIVE,      label: 'Live event format' },
+  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const el=document.getElementById('inline-fb-ratings');
+  if(!el) return;
+  if(!fbRows.length){el.innerHTML='<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>';return;}
+  const keys=[
+    {col:FB.OVERALL,label:'Overall experience'},
+    {col:FB.CHARITY_Q,label:'Charity choice'},
+    {col:FB.DATA,label:'Data & instructions'},
+    {col:FB.SUPPORT,label:'DCM support'},
+    {col:FB.LIVE,label:'Live event format'},
   ];
-  el.innerHTML = `
-    <div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>
-    ${ratingKeys.map(({ col, label }) => {
-      const vals = fbRows.map(r => n(r, col)).filter(x => x > 0);
-      const a = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
-      const rounded = Math.round(a*10)/10;
-      const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
-      const fullStars = Math.round(a);
-      const stars = Array.from({length:5},(_,i)=>
-        `<span style="font-size:16px;color:${i<fullStars?'#ef9f27':'#d3d1c7'}">★</span>`
-      ).join('');
+  el.innerHTML=`<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>`+
+    keys.map(({col,label})=>{
+      const vals=fbRows.map(r=>n(r,col)).filter(x=>x>0);
+      if(!vals.length) return '';
+      const a=vals.reduce((s,v)=>s+v,0)/vals.length;
+      const rd=Math.round(a*10)/10;
+      const disp=rd%1===0?Math.round(rd):rd.toFixed(1);
+      const fs=Math.round(a);
+      const stars=Array.from({length:5},(_,i)=>`<span style="font-size:16px;color:${i<fs?'#ef9f27':'#d3d1c7'}">★</span>`).join('');
       return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div>
         <div style="display:flex;gap:3px;">${stars}</div>
-        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${display}/5</div>
+        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</div>
       </div>`;
-    }).join('')}
-  `;
-}
-
-function renderOrgImpact(activeKey) {
-  const container = document.getElementById('survey-data');
-  const tabsEl = document.getElementById('survey-tabs');
-  if (!container || !surveyData) return;
-
-  const keys = Object.keys(surveyData);
-  const key = activeKey || keys[0];
-
-  tabsEl.innerHTML = keys.map(k =>
-    `<button class="tab ${k===key?'active':''}" onclick="renderOrgImpact('${k}')">${surveyData[k].tab}</button>`
-  ).join('');
-
-  const cat = surveyData[key];
-  if (!cat) return;
-
-  const hasData = cat.questions.some(q => q.vals.length > 0);
-  if (!hasData) {
-    container.innerHTML = '<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No post-project survey data yet for this category.</div>';
-    return;
-  }
-
-  let html = '<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Average post-project scores (1–5)</div>';
-  cat.questions.forEach(q => {
-    if (!q.vals.length) {
-      html += `<div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:#888780;margin-bottom:4px;line-height:1.4;">${q.label}</div>
-        <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
-      </div>`;
-      return;
-    }
-    const a = q.vals.reduce((x,y)=>x+y,0)/q.vals.length;
-    const rounded = Math.round(a*10)/10;
-    const display = rounded%1===0 ? Math.round(rounded) : rounded.toFixed(1);
-    const fullStars = Math.round(a);
-    const stars = Array.from({length:5},(_,i)=>
-      `<span style="font-size:14px;color:${i<fullStars?'#1d9e75':'#d3d1c7'}">★</span>`
-    ).join('');
-    html += `<div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="display:flex;gap:2px;">${stars}</div>
-        <div style="font-size:12px;font-weight:500;color:#1d9e75;">${display}/5</div>
-        <div style="font-size:11px;color:#b4b2a9;">(${q.vals.length} response${q.vals.length>1?'s':''})</div>
-      </div>
-    </div>`;
-  });
-  container.innerHTML = html;
+    }).join('');
 }
 
 loadAll();
