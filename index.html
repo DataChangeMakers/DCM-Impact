@@ -147,14 +147,25 @@
           </div>
         </div>
 
-        <!-- Org impact: pre/post pairs -->
+        <!-- Org impact: sub-tabs -->
         <div id="panel-org">
-          <div class="impact-legend">
-            <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
-            <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
-            <span><span style="font-size:11px;color:#0f6e56;font-weight:700;">↑</span><span style="font-size:11px;color:#888780;"> Change</span></span>
+          <div style="display:flex;gap:4px;margin-bottom:10px;">
+            <button class="stab active" id="otab-prepost" onclick="setOrgTab('prepost',this)">Pre → Post change</button>
+            <button class="stab" id="otab-sat" onclick="setOrgTab('sat',this)">Satisfaction</button>
           </div>
-          <div id="impact-pairs"></div>
+
+          <div id="org-panel-prepost">
+            <div class="impact-legend">
+              <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
+              <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
+              <span><span style="font-size:11px;color:#0f6e56;font-weight:700;">↑</span><span style="font-size:11px;color:#888780;"> Change</span></span>
+            </div>
+            <div id="impact-pairs"></div>
+          </div>
+
+          <div id="org-panel-sat" style="display:none;">
+            <div id="sat-ratings"></div>
+          </div>
         </div>
 
         <!-- Volunteer feedback ratings -->
@@ -256,9 +267,10 @@ const COL = {
   PRE_TOOLS:19, POST_TOOLS:20,
   PRE_IMPACT:21, POST_IMPACT:22,
   PRE_DECISIONS:23, POST_DECISIONS:24,
-  POST_DCM_QUALITY:27,POST_PARTNER_AGAIN:28,
-  POST_PROGRAMS:30,POST_MEASURE:31,
-  OVERALL_SAT:33,LIKELY_RECOMMEND:34,QUOTES:35,
+  // Satisfaction cols (AA=27, AB=28, AD=30, AE=31, AG=33)
+  SAT_DCM_QUALITY:27, SAT_PARTNER_AGAIN:28,
+  SAT_PROGRAMS:30, SAT_MEASURE:31,
+  SAT_OVERALL:33, LIKELY_RECOMMEND:34, QUOTES:35,
 };
 
 const VOL = { CHARITY:4,PROJECT_TYPE:8,SKILL:9,COUNTRY:10,CITY:11,HOURS:12,FIRST_TIME:13,TOOL:14 };
@@ -382,7 +394,7 @@ function mergeOrgs(rows) {
     const raw = v(row,COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
     const type = v(row,COL.TYPE).toLowerCase();
     const rowHours = n(row,COL.GRAND_TOTAL)||n(row,COL.HOURS_PROJECT)||0;
-    const sat = n(row,COL.OVERALL_SAT);
+    const sat = n(row,COL.SAT_OVERALL);
     const rec = n(row,COL.LIKELY_RECOMMEND);
     const q   = v(row,COL.QUOTES);
     const isViz = type.includes('visuali');
@@ -542,8 +554,10 @@ function renderDashboard(rows1, rows2, rows3) {
 
   // Pre/post impact pairs
   renderImpactPairs(orgs);
+  renderSatisfactionRatings(orgs);
 
-  // Quotes
+  // fix legacy col refs
+  const allSat = orgs.flatMap(o => o.surveyRows.map(r => n(r, COL.SAT_OVERALL)).filter(Boolean));
   const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
   document.getElementById('quotes-grid').innerHTML = allQuotes.map(q=>{
     const sentences = q.text.split(/[.!?][""]?\s+/);
@@ -712,6 +726,53 @@ function renderFeedback(rows3) {
   el.innerHTML=`<div class="quotes-grid">${
     enjoyed.map(t=>`<div class="quote-card"><div class="quote-mark">"</div><div class="quote-text">${t}</div></div>`).join('')
   }</div>`;
+}
+
+function setOrgTab(tab, btn) {
+  document.querySelectorAll('#otab-prepost,#otab-sat').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('org-panel-prepost').style.display = tab==='prepost'?'block':'none';
+  document.getElementById('org-panel-sat').style.display     = tab==='sat'?'block':'none';
+}
+
+const SAT_QUESTIONS = [
+  { col:27, label:'Quality of DCM support & contributions' },
+  { col:28, label:'Likely to partner with DCM again' },
+  { col:30, label:'Dashboards improved program delivery' },
+  { col:31, label:'Better able to measure & share results' },
+  { col:33, label:'Overall satisfaction with the project' },
+];
+
+function renderSatisfactionRatings(orgs) {
+  const el = document.getElementById('sat-ratings');
+  if (!el) return;
+  const html = SAT_QUESTIONS.map(q => {
+    const vals = [];
+    orgs.forEach(o => o.surveyRows.forEach(row => {
+      const val = n(row, q.col);
+      if (val) vals.push(val);
+    }));
+    if (!vals.length) return `<div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:#888780;margin-bottom:4px;">${q.label}</div>
+      <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
+    </div>`;
+    const a = vals.reduce((s,v)=>s+v,0)/vals.length;
+    const rd = Math.round(a*10)/10;
+    const disp = rd%1===0 ? Math.round(rd) : rd.toFixed(1);
+    const fs = Math.round(a);
+    const stars = Array.from({length:5},(_,i)=>
+      `<span style="font-size:15px;color:${i<fs?'#ef9f27':'#d3d1c7'}">★</span>`
+    ).join('');
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;gap:2px;">${stars}</div>
+        <span style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</span>
+        <span style="font-size:11px;color:#b4b2a9;">(${vals.length} response${vals.length>1?'s':''})</span>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Post-project satisfaction scores (1–5)</div>${html}`;
 }
 
 function setSurveyPanel(panel, btn) {
