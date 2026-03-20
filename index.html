@@ -39,7 +39,11 @@
   .chart-title { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
   .chart-sub { font-size: 11px; color: #b4b2a9; margin-bottom: 14px; }
 
-  /* Pre/post impact panel */
+  .stab { font-size: 11px; padding: 3px 10px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
+  .stab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
+  .stab:hover { background: #f1efe8; }
+
+  /* Pre/post */
   .impact-pair { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid #f1efe8; }
   .impact-pair:last-child { border-bottom: none; }
   .impact-label { font-size: 11px; color: #888780; flex: 1; line-height: 1.35; padding-top: 2px; }
@@ -51,7 +55,7 @@
   .delta-up   { background: #e1f5ee; color: #0f6e56; }
   .delta-dn   { background: #faece7; color: #993c1d; }
   .delta-eq   { background: #f1efe8; color: #888780; }
-  .delta-nodata { background: #f1efe8; color: #c0beb7; font-size:10px; }
+  .delta-none { background: #f1efe8; color: #c0beb7; font-size: 10px; }
   .impact-legend { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
 
@@ -81,17 +85,7 @@
   .insight-label { font-size: 12px; color: #888780; margin-top: 4px; }
   .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
   .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
-
   .footer { font-size: 11px; color: #b4b2a9; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid #e0deda; }
-
-  /* vol feedback inline */
-  #inline-fb-ratings { padding-top: 4px; }
-
-  /* survey toggle */
-  .survey-toggle { display: flex; gap: 4px; }
-  .stab { font-size: 11px; padding: 3px 10px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
-  .stab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
-  .stab:hover { background: #f1efe8; }
 
   @media (max-width: 700px) {
     .charts-row, .vol-charts-row, .quotes-grid, .insight-row { grid-template-columns: 1fr; }
@@ -103,7 +97,7 @@
 <div class="page">
 
   <div class="header">
-    <div style="display:flex; align-items:center; gap:16px;">
+    <div style="display:flex;align-items:center;gap:16px;">
       <img src="https://static.wixstatic.com/media/2608ce_4ffd1217cfad49bb950c7e852ea7dbc0~mv2.png/v1/crop/x_0,y_84,w_1280,h_857/fill/w_133,h_89,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/FullLogo_Transparent.png" alt="Data ChangeMakers" style="height:52px;width:auto;display:block;">
       <div>
         <h1>Data ChangeMakers</h1>
@@ -128,7 +122,7 @@
     <div class="metric-grid" id="metric-grid"></div>
 
     <div class="charts-row">
-      <!-- Hours chart -->
+      <!-- Hours bar chart -->
       <div class="chart-card">
         <div class="chart-title">Hours by organisation</div>
         <div class="chart-sub">data visualisation projects only</div>
@@ -137,23 +131,25 @@
         </div>
       </div>
 
-      <!-- Pre/Post impact panel (+ volunteer feedback toggle) -->
-      <div class="chart-card" style="padding:1rem 1.25rem;">
+      <!-- Org impact panel -->
+      <div class="chart-card">
+        <!-- Top toggle: org vs volunteer -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
           <div class="chart-title" id="survey-panel-title" style="margin:0;">Organisation impact</div>
-          <div class="survey-toggle">
+          <div style="display:flex;gap:4px;">
             <button class="stab active" id="stab-org" onclick="setSurveyPanel('org',this)">Organisation impact</button>
             <button class="stab" id="stab-vol" onclick="setSurveyPanel('vol',this)">Volunteer feedback</button>
           </div>
         </div>
 
-        <!-- Org impact: sub-tabs -->
+        <!-- Org panel: two sub-tabs -->
         <div id="panel-org">
           <div style="display:flex;gap:4px;margin-bottom:10px;">
             <button class="stab active" id="otab-prepost" onclick="setOrgTab('prepost',this)">Pre → Post change</button>
             <button class="stab" id="otab-sat" onclick="setOrgTab('sat',this)">Satisfaction</button>
           </div>
 
+          <!-- Pre/post view -->
           <div id="org-panel-prepost">
             <div class="impact-legend">
               <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
@@ -163,12 +159,13 @@
             <div id="impact-pairs"></div>
           </div>
 
+          <!-- Satisfaction view -->
           <div id="org-panel-sat" style="display:none;">
             <div id="sat-ratings"></div>
           </div>
         </div>
 
-        <!-- Volunteer feedback ratings -->
+        <!-- Volunteer feedback view -->
         <div id="panel-vol" style="display:none;">
           <div id="inline-fb-ratings"></div>
         </div>
@@ -183,18 +180,13 @@
       <table class="projects-table">
         <thead>
           <tr>
-            <th>Organisation</th>
-            <th>Project type</th>
-            <th>Volunteers</th>
-            <th>Total hours</th>
-            <th>Students</th>
+            <th>Organisation</th><th>Project type</th><th>Volunteers</th><th>Total hours</th><th>Students</th>
           </tr>
         </thead>
         <tbody id="proj-tbody"></tbody>
       </table>
     </div>
 
-    <!-- VOLUNTEER SECTION -->
     <div class="section-label">Our volunteers</div>
     <div class="vol-stat-row" id="vol-stat-row"></div>
 
@@ -236,49 +228,70 @@
 
     <div class="section-label">Insights</div>
     <div class="insight-row" id="insight-row"></div>
-    <div class="callout">
-      <div class="callout-text" id="callout-text"></div>
-    </div>
+    <div class="callout"><div class="callout-text" id="callout-text"></div></div>
 
     <div class="footer">Data ChangeMakers · Impact Report · Live from Google Sheets · Last updated: <span id="last-updated">—</span></div>
   </div>
-
 </div>
+
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const API_KEY   = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
-const SHEET1_ID = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
-const SHEET1_TAB= 'Project Impact';
-const SHEET2_ID = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
-const SHEET2_TAB= 'All Submissions';
-const SHEET3_ID = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
-const SHEET3_TAB= 'Feedback';
+// ── CONFIG ─────────────────────────────────────────────────────────────────────
+const API_KEY    = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
+const SHEET1_ID  = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
+const SHEET1_TAB = 'Project Impact';
+const SHEET2_ID  = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
+const SHEET2_TAB = 'All Submissions';
+const SHEET3_ID  = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
+const SHEET3_TAB = 'Feedback';
 
-const FB = { PROJECT:2,FNAME:3,LNAME:4,OVERALL:7,CHARITY_Q:8,DATA:9,SUPPORT:10,LIVE:11,ENJOYED:12,IMPROVED:13 };
-
-// Sheet1 cols (1-based)
+// Sheet 1 column indices (1-based)
 const COL = {
-  PROJECT_ID:1,DATE:2,CHARITY:3,TYPE:4,VOLS_PROJECT:5,HOURS_PROJECT:6,
-  HOURS_SUPPORT:7,STUDENTS:12,GRAND_TOTAL:14,
-  // Pre cols (green) — O=15, Q=17, S=19, U=21, W=23
-  // Post cols (purple) — P=16, R=18, T=20, V=22, X=24
-  PRE_DATA:15, POST_DATA:16,
-  PRE_LITERACY:17, POST_LITERACY:18,
-  PRE_TOOLS:19, POST_TOOLS:20,
-  PRE_IMPACT:21, POST_IMPACT:22,
+  CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6, STUDENTS:12, GRAND_TOTAL:14,
+  // Pre (green) / Post (purple) pairs
+  PRE_DATA:15,      POST_DATA:16,
+  PRE_LITERACY:17,  POST_LITERACY:18,
+  PRE_TOOLS:19,     POST_TOOLS:20,
+  PRE_IMPACT:21,    POST_IMPACT:22,
   PRE_DECISIONS:23, POST_DECISIONS:24,
-  // Satisfaction cols (AA=27, AB=28, AD=30, AE=31, AG=33)
-  SAT_DCM_QUALITY:27, SAT_PARTNER_AGAIN:28,
-  SAT_PROGRAMS:30, SAT_MEASURE:31,
-  SAT_OVERALL:33, LIKELY_RECOMMEND:34, QUOTES:35,
+  // Satisfaction-only cols (no pre)
+  SAT_DCM:27, SAT_PARTNER:28, SAT_PROGRAMS:30, SAT_MEASURE:31, SAT_OVERALL:33,
+  LIKELY_RECOMMEND:34, QUOTES:35,
 };
 
-const VOL = { CHARITY:4,PROJECT_TYPE:8,SKILL:9,COUNTRY:10,CITY:11,HOURS:12,FIRST_TIME:13,TOOL:14 };
+// Sheet 3 (volunteer feedback) col indices
+const FB = { OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12 };
+
+// Sheet 2 (volunteer submissions) col indices
+const VOL = { SKILL:9, COUNTRY:10, CITY:11, FIRST_TIME:13, TOOL:14 };
+
+// Pre/post pairs definition
+const PRE_POST_PAIRS = [
+  { label:'Confident discussing & using data internally', pre:COL.PRE_DATA,      post:COL.POST_DATA },
+  { label:'Overall data literacy is strong',              pre:COL.PRE_LITERACY,  post:COL.POST_LITERACY },
+  { label:'Tools & systems to manage data effectively',   pre:COL.PRE_TOOLS,     post:COL.POST_TOOLS },
+  { label:'Confidence demonstrating impact to funders',   pre:COL.PRE_IMPACT,    post:COL.POST_IMPACT },
+  { label:'Making decisions based on data',               pre:COL.PRE_DECISIONS, post:COL.POST_DECISIONS },
+];
+
+// Satisfaction-only questions
+const SAT_QUESTIONS = [
+  { col:COL.SAT_DCM,      label:'Quality of DCM support & contributions' },
+  { col:COL.SAT_PARTNER,  label:'Likely to partner with DCM again' },
+  { col:COL.SAT_PROGRAMS, label:'Dashboards improved program delivery' },
+  { col:COL.SAT_MEASURE,  label:'Better able to measure & share results' },
+  { col:COL.SAT_OVERALL,  label:'Overall satisfaction with the project' },
+];
 
 let charts = {};
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
-function n(row, col) { const val = parseFloat(v(row, col).replace(/[$,]/g,'')); return isNaN(val)?null:val; }
+function n(row, col) { const val = parseFloat(v(row,col).replace(/[$,]/g,'')); return isNaN(val) ? null : val; }
+function avg(arr)    { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+function fmt(x)      { return x !== null ? (x%1===0 ? x : x.toFixed(1)) : null; }
+function countBy(arr){ return arr.reduce((acc,val)=>{ if(!val||val==='') return acc; acc[val]=(acc[val]||0)+1; return acc; },{}); }
+function topN(obj,n) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
 
 function sheetURL(id, tab) {
   return `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
@@ -290,6 +303,12 @@ async function fetchSheet(id, tab, skip=1) {
   return (json.values||[]).slice(skip).filter(r=>r.some(c=>String(c).trim()!==''));
 }
 
+function starHtml(val, color) {
+  const f = Math.round(val);
+  return Array.from({length:5},(_,i)=>`<span style="color:${i<f?color:'#d3d1c7'};font-size:16px;">★</span>`).join('');
+}
+
+// ── Geo ────────────────────────────────────────────────────────────────────────
 const CITY_GEO = {
   'sydney':[-33.86,151.20],'melbourne':[-37.81,144.96],'brisbane':[-27.47,153.02],'perth':[-31.95,115.86],
   'adelaide':[-34.92,138.60],'auckland':[-36.84,174.76],'london':[51.50,-0.12],'manchester':[53.48,-2.24],
@@ -318,13 +337,13 @@ function renderCitiesMap(topCities) {
   const el = document.getElementById('cities-map');
   if (!el || typeof L === 'undefined') return;
   if (!citiesMap) {
-    citiesMap = L.map('cities-map', {zoomControl:true, scrollWheelZoom:false}).setView([20,10],2);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(citiesMap);
+    citiesMap = L.map('cities-map',{zoomControl:true,scrollWheelZoom:false}).setView([20,10],2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(citiesMap);
     citiesMarkerLayer = L.layerGroup().addTo(citiesMap);
   }
   citiesMarkerLayer.clearLayers();
   const plotted = [];
-  topCities.forEach(([city, count, data]) => {
+  topCities.forEach(([city,count,data])=>{
     const coords = CITY_GEO[city.toLowerCase()];
     if (!coords) return;
     const sz = Math.min(8+count*4,28);
@@ -333,7 +352,7 @@ function renderCitiesMap(topCities) {
       html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${count>1?9:0}px;font-weight:700;">${count>1?count:''}</div>`,
       iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],
     });
-    const volRows_html = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]).map(([name,subs])=>
+    const volHtml = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]).map(([name,subs])=>
       `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px;">
         <span>${name}</span><span style="color:#1D9E75;font-weight:700;margin-left:12px;">${subs} sub${subs>1?'s':''}</span>
       </div>`).join('') : '';
@@ -341,7 +360,7 @@ function renderCitiesMap(topCities) {
       <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${city}</div>
       ${data?.country?`<div style="font-size:11px;color:#888;margin-bottom:8px;">${data.country}</div>`:''}
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b4b2a9;margin-bottom:6px;">${count} volunteer${count>1?'s':''}</div>
-      ${volRows_html}
+      ${volHtml}
     </div>`;
     L.marker(coords,{icon}).bindPopup(popup,{maxWidth:240}).addTo(citiesMarkerLayer);
     plotted.push(coords);
@@ -353,6 +372,7 @@ function renderCitiesMap(topCities) {
   },200);
 }
 
+// ── Data loading ───────────────────────────────────────────────────────────────
 async function loadAll() {
   const dot = document.getElementById('status-dot');
   const lbl = document.getElementById('refresh-label');
@@ -382,26 +402,22 @@ async function loadAll() {
   }
 }
 
-function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
-function countBy(arr) {
-  return arr.reduce((acc,val)=>{ if(!val||val==='—'||val==='')return acc; acc[val]=(acc[val]||0)+1; return acc; },{});
-}
-function topN(obj,n) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
-function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
-
+// ── Org data helpers ───────────────────────────────────────────────────────────
 function mergeOrgs(rows) {
   return rows.map(row=>{
     const raw = v(row,COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
     const type = v(row,COL.TYPE).toLowerCase();
     const rowHours = n(row,COL.GRAND_TOTAL)||n(row,COL.HOURS_PROJECT)||0;
     const sat = n(row,COL.SAT_OVERALL);
-    const rec = n(row,COL.LIKELY_RECOMMEND);
     const q   = v(row,COL.QUOTES);
     const isViz = type.includes('visuali');
     return {
-      name:raw, types:new Set([type]), vols:n(row,COL.VOLS_PROJECT)||0,
-      hours:rowHours, vizHours:isViz?rowHours:0, students:n(row,COL.STUDENTS)||0,
-      sat:sat?[sat]:[], recommend:rec?[rec]:[], quotes:q?[{text:q,org:raw}]:[],
+      name:raw, types:new Set([type]),
+      vols:n(row,COL.VOLS_PROJECT)||0,
+      hours:rowHours, vizHours:isViz?rowHours:0,
+      students:n(row,COL.STUDENTS)||0,
+      sat:sat?[sat]:[],
+      quotes:q?[{text:q,org:raw}]:[],
       surveyRows:[row],
     };
   }).filter(o=>o.name);
@@ -418,82 +434,140 @@ function getTypeInfo(types) {
   return {label:t||'—',badge:'badge-viz'};
 }
 
-// ── Pre/Post pairs definition ─────────────────────────────────────────────────
-const PRE_POST_PAIRS = [
-  { label:'Confident discussing & using data internally', pre:COL.PRE_DATA,      post:COL.POST_DATA },
-  { label:'Overall data literacy is strong',              pre:COL.PRE_LITERACY,  post:COL.POST_LITERACY },
-  { label:'Tools & systems to manage data effectively',   pre:COL.PRE_TOOLS,     post:COL.POST_TOOLS },
-  { label:'Confidence demonstrating impact to funders',   pre:COL.PRE_IMPACT,    post:COL.POST_IMPACT },
-  { label:'Making decisions based on data',               pre:COL.PRE_DECISIONS, post:COL.POST_DECISIONS },
-];
+// ── Panel toggle functions ─────────────────────────────────────────────────────
+function setSurveyPanel(panel, btn) {
+  document.querySelectorAll('#stab-org,#stab-vol').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('panel-org').style.display = panel==='org'?'block':'none';
+  document.getElementById('panel-vol').style.display = panel==='vol'?'block':'none';
+  document.getElementById('survey-panel-title').textContent = panel==='org'?'Organisation impact':'Volunteer feedback';
+}
 
-function fmt(v) { return v!==null ? (v%1===0?v:v.toFixed(1)) : null; }
+function setOrgTab(tab, btn) {
+  document.querySelectorAll('#otab-prepost,#otab-sat').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('org-panel-prepost').style.display = tab==='prepost'?'block':'none';
+  document.getElementById('org-panel-sat').style.display     = tab==='sat'?'block':'none';
+}
 
+// ── Render pre/post pairs ──────────────────────────────────────────────────────
 function renderImpactPairs(orgs) {
   const el = document.getElementById('impact-pairs');
   if (!el) return;
-
-  const rows = PRE_POST_PAIRS.map(pair => {
+  el.innerHTML = PRE_POST_PAIRS.map(pair=>{
     const preVals=[], postVals=[];
-    orgs.forEach(o => o.surveyRows.forEach(row=>{
+    orgs.forEach(o=>o.surveyRows.forEach(row=>{
       const p=n(row,pair.pre), q=n(row,pair.post);
       if(p) preVals.push(p);
       if(q) postVals.push(q);
     }));
     const preAvg  = preVals.length  ? avg(preVals)  : null;
     const postAvg = postVals.length ? avg(postVals) : null;
-    const delta   = (preAvg!==null && postAvg!==null) ? postAvg-preAvg : null;
-    return {label:pair.label, preAvg, postAvg, delta, preN:preVals.length, postN:postVals.length};
-  });
+    const delta   = preAvg!==null && postAvg!==null ? postAvg-preAvg : null;
 
-  el.innerHTML = rows.map(r => {
-    // Delta pill
     let pillHtml;
-    if (r.delta===null) {
-      pillHtml = `<span class="delta-pill delta-nodata">—</span>`;
+    if (delta===null) {
+      pillHtml = `<span class="delta-pill delta-none">—</span>`;
     } else {
-      const sign = r.delta>0?'+':r.delta<0?'':' ';
-      const cls  = r.delta>0?'delta-up':r.delta<0?'delta-dn':'delta-eq';
-      const arrow= r.delta>0?'↑':r.delta<0?'↓':'→';
-      pillHtml = `<span class="delta-pill ${cls}">${arrow} ${sign}${fmt(r.delta)}</span>`;
+      const sign  = delta>0?'+':delta<0?'':' ';
+      const cls   = delta>0?'delta-up':delta<0?'delta-dn':'delta-eq';
+      const arrow = delta>0?'↑':delta<0?'↓':'→';
+      pillHtml = `<span class="delta-pill ${cls}">${arrow} ${sign}${fmt(delta)}</span>`;
     }
-
-    const preStr  = r.preAvg!==null  ? fmt(r.preAvg)  : null;
-    const postStr = r.postAvg!==null ? fmt(r.postAvg) : null;
-
     return `<div class="impact-pair">
-      <div class="impact-label">${r.label}</div>
+      <div class="impact-label">${pair.label}</div>
       <div class="impact-scores">
-        ${preStr  ? `<span class="score-pre">${preStr}</span>` : `<span class="score-na">—</span>`}
+        ${preAvg!==null ? `<span class="score-pre">${fmt(preAvg)}</span>` : `<span class="score-na">—</span>`}
         <span style="font-size:10px;color:#d3d1c7;">→</span>
-        ${postStr ? `<span class="score-post">${postStr}</span>` : `<span class="score-na">—</span>`}
+        ${postAvg!==null ? `<span class="score-post">${fmt(postAvg)}</span>` : `<span class="score-na">—</span>`}
         ${pillHtml}
       </div>
     </div>`;
   }).join('');
 }
 
+// ── Render satisfaction ratings ────────────────────────────────────────────────
+function renderSatisfactionRatings(orgs) {
+  const el = document.getElementById('sat-ratings');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Post-project satisfaction scores (1–5)</div>' +
+    SAT_QUESTIONS.map(q=>{
+      const vals = [];
+      orgs.forEach(o=>o.surveyRows.forEach(row=>{ const val=n(row,q.col); if(val) vals.push(val); }));
+      if (!vals.length) return `<div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:#888780;margin-bottom:4px;">${q.label}</div>
+        <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
+      </div>`;
+      const a   = avg(vals);
+      const rd  = Math.round(a*10)/10;
+      const disp= rd%1===0 ? Math.round(rd) : rd.toFixed(1);
+      return `<div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;gap:2px;">${starHtml(a,'#ef9f27')}</div>
+          <span style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</span>
+          <span style="font-size:11px;color:#b4b2a9;">(${vals.length} response${vals.length>1?'s':''})</span>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ── Render volunteer feedback ──────────────────────────────────────────────────
+function renderInlineFeedback(rows3) {
+  const fbRows = (rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const el = document.getElementById('inline-fb-ratings');
+  if (!el) return;
+  if (!fbRows.length) { el.innerHTML='<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>'; return; }
+  const keys=[
+    {col:FB.OVERALL,   label:'Overall experience'},
+    {col:FB.CHARITY_Q, label:'Charity choice'},
+    {col:FB.DATA,      label:'Data & instructions'},
+    {col:FB.SUPPORT,   label:'DCM support'},
+    {col:FB.LIVE,      label:'Live event format'},
+  ];
+  el.innerHTML = `<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>` +
+    keys.map(({col,label})=>{
+      const vals=fbRows.map(r=>n(r,col)).filter(x=>x>0);
+      if(!vals.length) return '';
+      const a=avg(vals), rd=Math.round(a*10)/10, disp=rd%1===0?Math.round(rd):rd.toFixed(1);
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div>
+        <div style="display:flex;gap:3px;">${starHtml(a,'#ef9f27')}</div>
+        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</div>
+      </div>`;
+    }).join('');
+}
+
+function renderFeedback(rows3) {
+  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const el=document.getElementById('fb-enjoyed-only');
+  if(!el) return;
+  if(!fbRows.length){el.innerHTML='<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';return;}
+  const enjoyed=fbRows.map(r=>v(r,FB.ENJOYED)).filter(t=>t.length>15).slice(-4).reverse();
+  el.innerHTML=`<div class="quotes-grid">${
+    enjoyed.map(t=>`<div class="quote-card"><div class="quote-mark">"</div><div class="quote-text">${t}</div></div>`).join('')
+  }</div>`;
+}
+
 // ── Main render ────────────────────────────────────────────────────────────────
 function renderDashboard(rows1, rows2, rows3) {
   const orgs = mergeOrgs(rows1.filter(r=>v(r,COL.CHARITY).length>1));
   const uniqueOrgCount = new Set(orgs.map(o=>o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
+
   document.getElementById('subtitle').textContent =
     `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${rows2.length} volunteer submissions`;
 
-  const totalHours = orgs.reduce((s,o)=>s+o.hours,0);
-  const totalVols  = orgs.reduce((s,o)=>s+o.vols,0);
-  const allSat = orgs.flatMap(o=>o.sat);
-  const avgSat = avg(allSat);
+  const totalHours    = orgs.reduce((s,o)=>s+o.hours,0);
+  const totalVols     = orgs.reduce((s,o)=>s+o.vols,0);
+  const allSat        = orgs.flatMap(o=>o.sat);
+  const avgSat        = avg(allSat);
   const avgHrsPerProj = orgs.length ? Math.round(totalHours/orgs.length) : 0;
-  const fbAllRows = (rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const fbOverallVals = fbAllRows.map(r=>n(r,FB.OVERALL)).filter(x=>x>0);
-  const volOverallAvg = fbOverallVals.length ? (Math.round(fbOverallVals.reduce((a,b)=>a+b,0)/fbOverallVals.length*10)/10).toFixed(1) : null;
 
-  function starHtml(val, color) {
-    const f=Math.round(val);
-    return Array.from({length:5},(_,i)=>`<span style="color:${i<f?color:'#d3d1c7'};font-size:16px;">★</span>`).join('');
-  }
+  const fbRows        = (rows3||[]).filter(r=>v(r,FB.OVERALL));
+  const fbOverallVals = fbRows.map(r=>n(r,FB.OVERALL)).filter(x=>x>0);
+  const volOverallAvg = fbOverallVals.length ? avg(fbOverallVals) : null;
 
+  // Key metrics
   document.getElementById('metric-grid').innerHTML = `
     <div class="metric metric-accent">
       <div class="metric-label">Volunteer hours</div>
@@ -526,8 +600,8 @@ function renderDashboard(rows1, rows2, rows3) {
     ${volOverallAvg ? `<div class="metric">
       <div class="metric-label">Volunteer overall exp.</div>
       <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        ${starHtml(parseFloat(volOverallAvg),'#ef9f27')}
-        <span style="font-size:13px;font-weight:400;color:#888780;">${parseFloat(volOverallAvg)%1===0?parseInt(volOverallAvg):volOverallAvg}/5</span>
+        ${starHtml(volOverallAvg,'#ef9f27')}
+        <span style="font-size:13px;font-weight:400;color:#888780;">${volOverallAvg%1===0?Math.round(volOverallAvg):volOverallAvg.toFixed(1)}/5</span>
       </div>
       <div class="metric-sub">volunteer feedback avg</div>
     </div>` : ''}
@@ -536,14 +610,13 @@ function renderDashboard(rows1, rows2, rows3) {
   // Hours chart
   const vizOrgs = orgs.filter(o=>o.vizHours>0);
   destroyChart('hours');
-  charts.hours = new Chart(document.getElementById('hoursChart'), {
+  charts.hours = new Chart(document.getElementById('hoursChart'),{
     type:'bar',
     data:{
       labels:vizOrgs.map(o=>o.name.length>14?o.name.slice(0,13)+'…':o.name),
       datasets:[{data:vizOrgs.map(o=>o.vizHours),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]
     },
-    options:{
-      responsive:true,maintainAspectRatio:false,
+    options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}}},
       scales:{
         x:{ticks:{font:{size:10},maxRotation:45,autoSkip:false},grid:{display:false}},
@@ -552,17 +625,16 @@ function renderDashboard(rows1, rows2, rows3) {
     }
   });
 
-  // Pre/post impact pairs
+  // Impact panels
   renderImpactPairs(orgs);
   renderSatisfactionRatings(orgs);
 
-  // fix legacy col refs
-  const allSat = orgs.flatMap(o => o.surveyRows.map(r => n(r, COL.SAT_OVERALL)).filter(Boolean));
+  // Quotes
   const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
   document.getElementById('quotes-grid').innerHTML = allQuotes.map(q=>{
     const sentences = q.text.split(/[.!?][""]?\s+/);
-    const display = sentences[0].length>30 ? sentences[0] : sentences.slice(0,2).join('. ');
-    const clean = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
+    const display   = sentences[0].length>30 ? sentences[0] : sentences.slice(0,2).join('. ');
+    const clean     = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
     return `<div class="quote-card">
       <div class="quote-mark">"</div>
       <div class="quote-text">${clean}${clean.endsWith('.')?'':'.'}</div>
@@ -582,8 +654,8 @@ function renderDashboard(rows1, rows2, rows3) {
     </tr>`;
   }).join('');
 
-  // ── Volunteer section ──────────────────────────────────────────────────────
-  const volRows = rows2.filter(r=>v(r,VOL.SKILL)||v(r,VOL.COUNTRY)||v(r,VOL.TOOL));
+  // Volunteer section
+  const volRows   = rows2.filter(r=>v(r,VOL.SKILL)||v(r,VOL.COUNTRY)||v(r,VOL.TOOL));
   const skills    = volRows.map(r=>v(r,VOL.SKILL)).filter(Boolean);
   const countries = volRows.map(r=>v(r,VOL.COUNTRY)).filter(Boolean);
   const cities    = volRows.map(r=>v(r,VOL.CITY)).filter(Boolean);
@@ -595,26 +667,10 @@ function renderDashboard(rows1, rows2, rows3) {
   const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
 
   document.getElementById('vol-stat-row').innerHTML = `
-    <div class="metric">
-      <div class="metric-label">Submissions</div>
-      <div class="metric-value">${volRows.length}</div>
-      <div class="metric-sub">volunteer entries</div>
-    </div>
-    <div class="metric metric-accent">
-      <div class="metric-label">Countries</div>
-      <div class="metric-value">${uniqueCountries}</div>
-      <div class="metric-sub">represented</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Cities</div>
-      <div class="metric-value">${uniqueCities}</div>
-      <div class="metric-sub">volunteer locations</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">First-timers</div>
-      <div class="metric-value">${firstTimePct}%</div>
-      <div class="metric-sub">new to programme</div>
-    </div>
+    <div class="metric"><div class="metric-label">Submissions</div><div class="metric-value">${volRows.length}</div><div class="metric-sub">volunteer entries</div></div>
+    <div class="metric metric-accent"><div class="metric-label">Countries</div><div class="metric-value">${uniqueCountries}</div><div class="metric-sub">represented</div></div>
+    <div class="metric"><div class="metric-label">Cities</div><div class="metric-value">${uniqueCities}</div><div class="metric-sub">volunteer locations</div></div>
+    <div class="metric"><div class="metric-label">First-timers</div><div class="metric-value">${firstTimePct}%</div><div class="metric-sub">new to programme</div></div>
   `;
 
   const skillCounts = countBy(skills);
@@ -670,6 +726,7 @@ function renderDashboard(rows1, rows2, rows3) {
     .sort((a,b)=>b[1]-a[1]);
   renderCitiesMap(topCities);
 
+  // First-time chart
   const ftYes=firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const ftNo=firstTime.length-ftYes;
   destroyChart('firstTime');
@@ -681,7 +738,7 @@ function renderDashboard(rows1, rows2, rows3) {
         tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/firstTime.length*100)}%)`}}}}
   });
 
-  // Feedback
+  // Volunteer feedback
   renderFeedback(rows3);
   renderInlineFeedback(rows3);
 
@@ -693,123 +750,16 @@ function renderDashboard(rows1, rows2, rows3) {
   const topSkill = topN(skillCounts,1)[0];
 
   document.getElementById('insight-row').innerHTML = `
-    <div class="insight-card">
-      <div class="insight-num">${uniqueCountries}</div>
-      <div class="insight-label">Countries represented across our volunteer community</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">${firstTimePct}%</div>
-      <div class="insight-label">Of volunteers are participating in Data ChangeMakers for the first time</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">${largestPct}%</div>
-      <div class="insight-label">Of all hours were delivered to ${largestOrg.name} — the flagship project</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">${avgSat?avgSat.toFixed(1)+'/5':'—'}</div>
-      <div class="insight-label">Average satisfaction across ${completedSurveys} post-project surveys</div>
-    </div>
+    <div class="insight-card"><div class="insight-num">${uniqueCountries}</div><div class="insight-label">Countries represented across our volunteer community</div></div>
+    <div class="insight-card"><div class="insight-num">${firstTimePct}%</div><div class="insight-label">Of volunteers are participating in Data ChangeMakers for the first time</div></div>
+    <div class="insight-card"><div class="insight-num">${largestPct}%</div><div class="insight-label">Of all hours were delivered to ${largestOrg.name} — the flagship project</div></div>
+    <div class="insight-card"><div class="insight-num">${avgSat?avgSat.toFixed(1)+'/5':'—'}</div><div class="insight-label">Average satisfaction across ${completedSurveys} post-project surveys</div></div>
   `;
 
   const topToolStr  = topTool  ? ` The most used tool is ${topTool[0]}.` : '';
   const topSkillStr = topSkill ? ` Most volunteers self-identify as ${topSkill[0].toLowerCase()} level.` : '';
   document.getElementById('callout-text').textContent =
     `Volunteers span ${uniqueCountries} countries and ${uniqueCities} cities, reflecting a truly global community.${topSkillStr}${topToolStr} ${completedSurveys} of ${orgs.length} organisations have completed post-project surveys — collecting these consistently will strengthen future impact reporting.`;
-}
-
-function renderFeedback(rows3) {
-  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const el=document.getElementById('fb-enjoyed-only');
-  if(!el) return;
-  if(!fbRows.length){el.innerHTML='<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';return;}
-  const enjoyed=fbRows.map(r=>v(r,FB.ENJOYED)).filter(t=>t.length>15).slice(-4).reverse();
-  el.innerHTML=`<div class="quotes-grid">${
-    enjoyed.map(t=>`<div class="quote-card"><div class="quote-mark">"</div><div class="quote-text">${t}</div></div>`).join('')
-  }</div>`;
-}
-
-function setOrgTab(tab, btn) {
-  document.querySelectorAll('#otab-prepost,#otab-sat').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('org-panel-prepost').style.display = tab==='prepost'?'block':'none';
-  document.getElementById('org-panel-sat').style.display     = tab==='sat'?'block':'none';
-}
-
-const SAT_QUESTIONS = [
-  { col:27, label:'Quality of DCM support & contributions' },
-  { col:28, label:'Likely to partner with DCM again' },
-  { col:30, label:'Dashboards improved program delivery' },
-  { col:31, label:'Better able to measure & share results' },
-  { col:33, label:'Overall satisfaction with the project' },
-];
-
-function renderSatisfactionRatings(orgs) {
-  const el = document.getElementById('sat-ratings');
-  if (!el) return;
-  const html = SAT_QUESTIONS.map(q => {
-    const vals = [];
-    orgs.forEach(o => o.surveyRows.forEach(row => {
-      const val = n(row, q.col);
-      if (val) vals.push(val);
-    }));
-    if (!vals.length) return `<div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:#888780;margin-bottom:4px;">${q.label}</div>
-      <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
-    </div>`;
-    const a = vals.reduce((s,v)=>s+v,0)/vals.length;
-    const rd = Math.round(a*10)/10;
-    const disp = rd%1===0 ? Math.round(rd) : rd.toFixed(1);
-    const fs = Math.round(a);
-    const stars = Array.from({length:5},(_,i)=>
-      `<span style="font-size:15px;color:${i<fs?'#ef9f27':'#d3d1c7'}">★</span>`
-    ).join('');
-    return `<div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="display:flex;gap:2px;">${stars}</div>
-        <span style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</span>
-        <span style="font-size:11px;color:#b4b2a9;">(${vals.length} response${vals.length>1?'s':''})</span>
-      </div>
-    </div>`;
-  }).join('');
-  el.innerHTML = `<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Post-project satisfaction scores (1–5)</div>${html}`;
-}
-
-function setSurveyPanel(panel, btn) {
-  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('panel-org').style.display = panel==='org'?'block':'none';
-  document.getElementById('panel-vol').style.display = panel==='vol'?'block':'none';
-  document.getElementById('survey-panel-title').textContent = panel==='org'?'Organisation impact':'Volunteer feedback';
-}
-
-function renderInlineFeedback(rows3) {
-  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const el=document.getElementById('inline-fb-ratings');
-  if(!el) return;
-  if(!fbRows.length){el.innerHTML='<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>';return;}
-  const keys=[
-    {col:FB.OVERALL,label:'Overall experience'},
-    {col:FB.CHARITY_Q,label:'Charity choice'},
-    {col:FB.DATA,label:'Data & instructions'},
-    {col:FB.SUPPORT,label:'DCM support'},
-    {col:FB.LIVE,label:'Live event format'},
-  ];
-  el.innerHTML=`<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>`+
-    keys.map(({col,label})=>{
-      const vals=fbRows.map(r=>n(r,col)).filter(x=>x>0);
-      if(!vals.length) return '';
-      const a=vals.reduce((s,v)=>s+v,0)/vals.length;
-      const rd=Math.round(a*10)/10;
-      const disp=rd%1===0?Math.round(rd):rd.toFixed(1);
-      const fs=Math.round(a);
-      const stars=Array.from({length:5},(_,i)=>`<span style="font-size:16px;color:${i<fs?'#ef9f27':'#d3d1c7'}">★</span>`).join('');
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div>
-        <div style="display:flex;gap:3px;">${stars}</div>
-        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</div>
-      </div>`;
-    }).join('');
 }
 
 loadAll();
