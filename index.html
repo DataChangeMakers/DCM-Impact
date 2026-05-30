@@ -37,7 +37,7 @@
   .chart-title { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
   .chart-sub { font-size: 11px; color: #b4b2a9; margin-bottom: 14px; }
 
-  .stab { font-size: 11px; padding: 3px 10px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; }
+  .stab { font-size: 11px; padding: 5px 12px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; transition: all 0.2s; }
   .stab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
   .stab:hover { background: #f1efe8; }
 
@@ -151,42 +151,34 @@
         </div>
       </div>
 
-      <!-- Org impact panel -->
+      <!-- Org impact & volunteer feedback combined aligned panel -->
       <div class="chart-card">
-        <!-- Top toggle: org vs volunteer -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div class="chart-title" id="survey-panel-title" style="margin:0;">Organisation impact</div>
-          <div style="display:flex;gap:4px;">
-            <button class="stab active" id="stab-org" onclick="setSurveyPanel('org',this)">Organisation impact</button>
-            <button class="stab" id="stab-vol" onclick="setSurveyPanel('vol',this)">Volunteer feedback</button>
+          <div class="chart-title" style="margin:0;">Impact</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="stab active" id="tab-org" onclick="switchTab('org', this)">Organisation impact</button>
+            <button class="stab" id="tab-sat" onclick="switchTab('sat', this)">Satisfaction</button>
+            <button class="stab" id="tab-vol" onclick="switchTab('vol', this)">Volunteer feedback</button>
           </div>
         </div>
 
-        <!-- Org panel: two sub-tabs -->
-        <div id="panel-org">
-          <div style="display:flex;gap:4px;margin-bottom:10px;">
-            <button class="stab active" id="otab-prepost" onclick="setOrgTab('prepost',this)">Pre → Post change</button>
-            <button class="stab" id="otab-sat" onclick="setOrgTab('sat',this)">Satisfaction</button>
+        <!-- Pre/post view -->
+        <div id="org-panel-prepost">
+          <div class="impact-legend">
+            <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
+            <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
+            <span><span style="font-size:11px;color:#0f6e56;font-weight:700;">↑</span><span style="font-size:11px;color:#888780;"> Change</span></span>
           </div>
+          <div id="impact-pairs"></div>
+        </div>
 
-          <!-- Pre/post view -->
-          <div id="org-panel-prepost">
-            <div class="impact-legend">
-              <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
-              <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
-              <span><span style="font-size:11px;color:#0f6e56;font-weight:700;">↑</span><span style="font-size:11px;color:#888780;"> Change</span></span>
-            </div>
-            <div id="impact-pairs"></div>
-          </div>
-
-          <!-- Satisfaction view -->
-          <div id="org-panel-sat" style="display:none;">
-            <div id="sat-ratings"></div>
-          </div>
+        <!-- Satisfaction view -->
+        <div id="org-panel-sat" style="display:none; margin-top: 10px;">
+          <div id="sat-ratings"></div>
         </div>
 
         <!-- Volunteer feedback view -->
-        <div id="panel-vol" style="display:none;">
+        <div id="panel-vol" style="display:none; margin-top: 10px;">
           <div id="inline-fb-ratings"></div>
         </div>
       </div>
@@ -542,19 +534,25 @@ function getTypeInfo(types) {
 }
 
 // ── Panel toggles ──────────────────────────────────────────────────────────────
-function setSurveyPanel(panel, btn) {
-  document.querySelectorAll('#stab-org,#stab-vol').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('panel-org').style.display = panel==='org'?'block':'none';
-  document.getElementById('panel-vol').style.display = panel==='vol'?'block':'none';
-  document.getElementById('survey-panel-title').textContent = panel==='org'?'Organisation impact':'Volunteer feedback';
-}
+function switchTab(tab, btn) {
+  document.querySelectorAll('.chart-card .stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 
-function setOrgTab(tab, btn) {
-  document.querySelectorAll('#otab-prepost,#otab-sat').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('org-panel-prepost').style.display = tab==='prepost'?'block':'none';
-  document.getElementById('org-panel-sat').style.display     = tab==='sat'?'block':'none';
+  if (tab === 'org') {
+    document.getElementById('org-panel-prepost').style.display = 'block';
+    document.getElementById('org-panel-sat').style.display = 'none';
+    document.getElementById('panel-vol').style.display = 'none';
+  } 
+  else if (tab === 'sat') {
+    document.getElementById('org-panel-prepost').style.display = 'none';
+    document.getElementById('org-panel-sat').style.display = 'block';
+    document.getElementById('panel-vol').style.display = 'none';
+  } 
+  else if (tab === 'vol') {
+    document.getElementById('org-panel-prepost').style.display = 'none';
+    document.getElementById('org-panel-sat').style.display = 'none';
+    document.getElementById('panel-vol').style.display = 'block';
+  }
 }
 
 // ── Partner Quotes Carousel Logic ──
@@ -852,7 +850,6 @@ function renderDashboard(rows1, rows2, rows3) {
   const avgSat        = avg(allSat);
   const avgHrsPerProj = orgs.length ? Math.round(totalHours/orgs.length) : 0;
 
-  // Set the top banner subtitles to display dynamic totals
   document.getElementById('subtitle').textContent =
     `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${totalVols} volunteers`;
 
@@ -906,7 +903,7 @@ function renderDashboard(rows1, rows2, rows3) {
   charts.hours = new Chart(document.getElementById('hoursChart'),{
     type:'bar',
     data:{
-      labels:vizOrgs.map(o=>o.name), // Pass full names so they render untruncated in the hover tooltip
+      labels:vizOrgs.map(o=>o.name), 
       datasets:[{data:vizOrgs.map(o=>o.vizHours),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]
     },
     options:{responsive:true,maintainAspectRatio:false,
@@ -925,7 +922,6 @@ function renderDashboard(rows1, rows2, rows3) {
             font:{size:10},
             maxRotation:45,
             autoSkip:false,
-            // Truncate only on the x-axis visual ticks to keep the chart clean
             callback: function(val, index) {
               const label = this.getLabelForValue(val);
               return label.length > 14 ? label.slice(0, 13) + '…' : label;
