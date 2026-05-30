@@ -146,7 +146,6 @@
       <!-- Hours bar chart -->
       <div class="chart-card">
         <div class="chart-title">Hours by organisation</div>
-        <div class="chart-sub">data visualisation projects only</div>
         <div style="position:relative;width:100%;height:260px;">
           <canvas id="hoursChart"></canvas>
         </div>
@@ -517,7 +516,8 @@ function mergeOrgs(rows) {
     const rowHours = n(row,COL.GRAND_TOTAL) !== null ? n(row,COL.GRAND_TOTAL) : (n(row,COL.HOURS_PROJECT)||0);
     const sat = n(row,COL.SAT_OVERALL);
     const q   = v(row,COL.QUOTES);
-    const isViz = type.includes('visuali');
+    const isExcluded = type.includes('learning') || type.includes('educat') || type.includes('webinar') || type.includes('conference');
+    const isViz = !isExcluded;
     return {
       name:raw, types:new Set([type]),
       vols:n(row,COL.VOLS_PROJECT)||0,
@@ -906,13 +906,33 @@ function renderDashboard(rows1, rows2, rows3) {
   charts.hours = new Chart(document.getElementById('hoursChart'),{
     type:'bar',
     data:{
-      labels:vizOrgs.map(o=>o.name.length>14?o.name.slice(0,13)+'…':o.name),
+      labels:vizOrgs.map(o=>o.name), // Pass full names so they render untruncated in the hover tooltip
       datasets:[{data:vizOrgs.map(o=>o.vizHours),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]
     },
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          padding:12,
+          titleFont:{size:13,weight:'600'},
+          bodyFont:{size:12},
+          callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}
+        }
+      },
       scales:{
-        x:{ticks:{font:{size:10},maxRotation:45,autoSkip:false},grid:{display:false}},
+        x:{
+          ticks:{
+            font:{size:10},
+            maxRotation:45,
+            autoSkip:false,
+            // Truncate only on the x-axis visual ticks to keep the chart clean
+            callback: function(val, index) {
+              const label = this.getLabelForValue(val);
+              return label.length > 14 ? label.slice(0, 13) + '…' : label;
+            }
+          },
+          grid:{display:false}
+        },
         y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
       }
     }
