@@ -6,14 +6,16 @@
 <title>Data ChangeMakers — Impact Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+  /* Base & Reset */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f8f6; color: #1a1a18; min-height: 100vh; padding: 2rem 1rem; }
   .page { max-width: 960px; margin: 0 auto; }
 
+  /* Header & Loading */
   .header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid #e0deda; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
   .header h1 { font-size: 24px; font-weight: 500; color: #1a1a18; }
   .header p { font-size: 13px; color: #888780; margin-top: 4px; }
-  .refresh-btn { font-size: 12px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: #fff; cursor: pointer; color: #888780; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .refresh-btn { font-size: 12px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: #fff; cursor: pointer; color: #888780; font-family: inherit; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
   .refresh-btn:hover { background: #f1efe8; color: #1a1a18; }
   .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #b4b2a9; display: inline-block; }
   .status-dot.live { background: #1d9e75; }
@@ -23,25 +25,27 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .error-box { background: #faece7; border-radius: 8px; padding: 16px 20px; color: #993c1d; font-size: 13px; line-height: 1.6; margin-bottom: 1.5rem; }
 
+  /* Metrics Grid */
   .section-label { font-size: 11px; letter-spacing: 0.08em; color: #b4b2a9; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
   .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
   .metric { background: #f1efe8; border-radius: 8px; padding: 14px 16px; }
   .metric-label { font-size: 12px; color: #888780; margin-bottom: 6px; }
-  .metric-value { font-size: 26px; font-weight: 500; color: #1a1a18; line-height: 1; }
+  .metric-value { font-size: 26px; font-weight: 500; color: #1a1a18; line-height: 1; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .metric-sub { font-size: 11px; color: #b4b2a9; margin-top: 4px; }
   .metric-accent { background: #e1f5ee; }
   .metric-accent .metric-value { color: #0f6e56; }
 
+  /* Charts */
   .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .chart-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
   .chart-title { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
-  .chart-sub { font-size: 11px; color: #b4b2a9; margin-bottom: 14px; }
-
-  .stab { font-size: 11px; padding: 5px 12px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; transition: all 0.2s; }
+  
+  /* Tabs */
+  .stab { font-size: 11px; padding: 5px 12px; border-radius: 8px; border: 0.5px solid #d3d1c7; background: transparent; cursor: pointer; color: #888780; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
   .stab.active { background: #f1efe8; color: #1a1a18; border-color: #b4b2a9; font-weight: 500; }
-  .stab:hover { background: #f1efe8; }
+  .stab:hover:not(.active) { background: #faf9f7; }
 
-  /* Pre/post */
+  /* Impact Delta View */
   .impact-pair { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid #f1efe8; }
   .impact-pair:last-child { border-bottom: none; }
   .impact-label { font-size: 11px; color: #888780; flex: 1; line-height: 1.35; padding-top: 2px; }
@@ -57,33 +61,33 @@
   .impact-legend { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
 
-  /* Testimonials carousel styles */
-  .carousel-wrapper { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1.25rem 1.5rem; position: relative; margin-bottom: 1.5rem; }
-  .carousel-container { position: relative; width: 100%; overflow: hidden; }
-  .carousel-slide { position: absolute; top: 0; left: 0; width: 100%; opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none; }
-  .carousel-slide.active { position: relative; opacity: 1; transform: translateY(0); pointer-events: auto; }
-  .quote-mark { font-size: 28px; line-height: 1; color: #1d9e75; font-weight: 500; margin-bottom: 4px; }
-  .quote-text { font-size: 13px; color: #2c2c2a; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
-  .quote-org  { font-size: 11px; color: #b4b2a9; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-  .carousel-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; border-top: 0.5px solid #f1efe8; padding-top: 10px; }
-  .carousel-dots { display: flex; gap: 6px; }
-  .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: #d3d1c7; cursor: pointer; transition: background 0.3s; }
-  .carousel-dot.active { background: #1d9e75; }
-  .carousel-btn { background: transparent; border: none; color: #888780; cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
-  .carousel-btn:hover { background: #f1efe8; color: #1a1a18; }
-
-  .table-wrap { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; overflow-x: auto; }
-  .projects-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
-  .projects-table th { text-align: left; font-weight: 500; color: #888780; padding: 8px 12px; border-bottom: 0.5px solid #e0deda; font-size: 11px; background: #faf9f7; white-space: nowrap; }
-  .projects-table td { padding: 10px 12px; border-bottom: 0.5px solid #f1efe8; color: #1a1a18; vertical-align: middle; }
-  .projects-table tr:last-child td { border-bottom: none; }
-  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
+  /* Dynamic Table & Expandable Drawers */
+  .table-wrap { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+  .projects-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+  .projects-table th { font-weight: 500; color: #888780; padding: 12px 16px; border-bottom: 0.5px solid #e0deda; font-size: 11px; background: #faf9f7; white-space: nowrap; }
+  .projects-table td { padding: 12px 16px; border-bottom: 0.5px solid #f1efe8; color: #1a1a18; vertical-align: middle; }
+  .expandable-row { cursor: pointer; transition: background 0.2s; }
+  .expandable-row:hover { background: #faf9f7; }
+  
+  .badge { font-size: 10px; padding: 3px 8px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
   .badge-viz { background: #e1f5ee; color: #0f6e56; }
   .badge-multi { background: #eeedfe; color: #534ab7; }
   .badge-edu { background: #faeeda; color: #854f0b; }
   .badge-health { background: #faece7; color: #993c1d; }
 
-  /* 4-column responsive volunteer chart row styles */
+  .toggle-icon { font-size: 10px; color: #1d9e75; margin-right: 4px; display: inline-block; transition: transform 0.2s; }
+  .expandable-row.open .toggle-icon { transform: rotate(90deg); }
+  
+  .drawer-row { display: none; background: #faf9f7; }
+  .drawer-row.open { display: table-row; border-bottom: 1px solid #e0deda; }
+  .drawer-content { padding: 20px; }
+  .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .drawer-label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: #b4b2a9; text-transform: uppercase; margin-bottom: 6px; }
+  .drawer-value { font-size: 13px; color: #1a1a18; }
+  
+  .quote-bubble { border-left: 2px solid #1d9e75; padding-left: 12px; font-style: italic; color: #555; font-size: 12px; line-height: 1.5; }
+
+  /* 4-column charts */
   .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .vol-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
 
@@ -91,23 +95,24 @@
   .insight-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
   .insight-num   { font-size: 32px; font-weight: 500; color: #0f6e56; line-height: 1; }
   .insight-label { font-size: 12px; color: #888780; margin-top: 4px; }
+  
   .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
   .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
   .footer { font-size: 11px; color: #b4b2a9; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid #e0deda; }
 
+  /* Responsive Adjustments */
   @media (max-width: 900px) and (min-width: 701px) {
     .vol-charts-row { grid-template-columns: 1fr 1fr; }
   }
-
   @media (max-width: 700px) {
-    .charts-row, .vol-charts-row, .quotes-grid, .insight-row { grid-template-columns: 1fr; }
+    .charts-row, .vol-charts-row, .insight-row, .drawer-grid { grid-template-columns: 1fr; }
     .header { flex-direction: column; align-items: flex-start; }
+    .projects-table th:nth-child(3), .projects-table td:nth-child(3) { display: none; }
   }
 </style>
 </head>
 <body>
 <div class="page">
-
   <div class="header">
     <div style="display:flex;align-items:center;gap:16px;">
       <img src="https://static.wixstatic.com/media/2608ce_4ffd1217cfad49bb950c7e852ea7dbc0~mv2.png/v1/crop/x_0,y_84,w_1280,h_857/fill/w_133,h_89,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/FullLogo_Transparent.png" alt="Data ChangeMakers" style="height:52px;width:auto;display:block;">
@@ -117,13 +122,6 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <!-- Year Filter Dropdown -->
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:12px;color:#888780;">Year:</span>
-        <select id="year-filter" onchange="filterByYear()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
-          <option value="all">All years</option>
-        </select>
-      </div>
       <button class="refresh-btn" onclick="loadAll()">
         <span class="status-dot" id="status-dot"></span>
         <span id="refresh-label">Refresh data</span>
@@ -134,7 +132,7 @@
   <div id="error-area"></div>
   <div id="loading-area" class="loading">
     <div class="loading-spinner"></div>
-    Connecting to Google Sheets...
+    Connecting securely to Google Sheets...
   </div>
 
   <div id="dashboard" style="display:none;">
@@ -143,27 +141,26 @@
     <div class="metric-grid" id="metric-grid"></div>
 
     <div class="charts-row">
-      <!-- Hours bar chart -->
+      <!-- Hours Chart -->
       <div class="chart-card">
         <div class="chart-title">Hours by organisation</div>
-        <div style="position:relative;width:100%;height:260px;">
+        <div style="position:relative;width:100%;height:260px;margin-top:16px;">
           <canvas id="hoursChart"></canvas>
         </div>
       </div>
 
-      <!-- Org impact & volunteer feedback combined aligned panel -->
+      <!-- Impact Tabs Panel -->
       <div class="chart-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div class="chart-title" style="margin:0;">Impact</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
-            <button class="stab active" id="tab-org" onclick="switchTab('org', this)">Organisation impact</button>
-            <button class="stab" id="tab-sat" onclick="switchTab('sat', this)">Satisfaction</button>
-            <button class="stab" id="tab-vol" onclick="switchTab('vol', this)">Volunteer feedback</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+          <div class="chart-title" style="margin:0;">Impact & feedback</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="stab active" id="tab-impact" onclick="switchPanel('impact', this)">Organisation impact</button>
+            <button class="stab" id="tab-sat" onclick="switchPanel('sat', this)">Satisfaction</button>
+            <button class="stab" id="tab-vol" onclick="switchPanel('vol', this)">Volunteer feedback</button>
           </div>
         </div>
 
-        <!-- Pre/post view -->
-        <div id="org-panel-prepost">
+        <div id="panel-impact">
           <div class="impact-legend">
             <span><span class="legend-dot" style="background:#1d9e75;"></span><span style="font-size:11px;color:#888780;">Pre-project</span></span>
             <span><span class="legend-dot" style="background:#534ab7;"></span><span style="font-size:11px;color:#888780;">Post-project</span></span>
@@ -172,36 +169,43 @@
           <div id="impact-pairs"></div>
         </div>
 
-        <!-- Satisfaction view -->
-        <div id="org-panel-sat" style="display:none; margin-top: 10px;">
+        <div id="panel-sat" style="display:none;">
           <div id="sat-ratings"></div>
         </div>
 
-        <!-- Volunteer feedback view -->
-        <div id="panel-vol" style="display:none; margin-top: 10px;">
+        <div id="panel-vol" style="display:none;">
           <div id="inline-fb-ratings"></div>
         </div>
       </div>
     </div>
 
-    <div class="section-label">What our partners say</div>
-    <div id="quotes-carousel-wrapper"></div>
-
-    <!-- Organisation Overview with dynamic Project Type filter -->
+    <!-- Interactive Filtered Table -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
       <div class="section-label" style="margin-bottom:0;">Organisation overview</div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:12px;color:#888780;">Project Type:</span>
-        <select id="type-filter" onchange="filterTableByType()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
-          <option value="all">All types</option>
-        </select>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:12px;color:#888780;">Project Type:</span>
+          <select id="type-filter" onchange="applyTableFilters()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
+            <option value="all">All types</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:12px;color:#888780;">Sort by:</span>
+          <select id="sort-filter" onchange="applyTableFilters()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
+            <option value="recent">Most Recent</option>
+            <option value="oldest">Oldest</option>
+          </select>
+        </div>
       </div>
     </div>
+    
     <div class="table-wrap">
       <table class="projects-table">
         <thead>
           <tr>
-            <th>Organisation</th><th>Project type</th><th>Total hours</th>
+            <th style="width: 50%;">Organisation</th>
+            <th style="width: 25%;">Project type</th>
+            <th style="width: 25%;">Total hours</th>
           </tr>
         </thead>
         <tbody id="proj-tbody"></tbody>
@@ -211,38 +215,30 @@
     <div class="section-label">Our volunteers</div>
     <div class="vol-stat-row" id="vol-stat-row"></div>
 
-    <!-- Grouped Volunteer Chart Row -->
     <div class="vol-charts-row">
       <div class="chart-card">
         <div class="chart-title">Data skill level</div>
-        <div class="chart-sub">self-reported by volunteers</div>
-        <div style="position:relative;width:100%;height:200px;"><canvas id="skillChart"></canvas></div>
+        <div style="position:relative;width:100%;height:180px;margin-top:10px;"><canvas id="skillChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Tools used</div>
-        <div class="chart-sub">across all submissions</div>
-        <div style="position:relative;width:100%;height:200px;"><canvas id="toolChart"></canvas></div>
+        <div style="position:relative;width:100%;height:180px;margin-top:10px;"><canvas id="toolChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Top countries</div>
-        <div class="chart-sub">volunteer locations</div>
-        <div style="position:relative;width:100%;height:200px;"><canvas id="countryChart"></canvas></div>
+        <div style="position:relative;width:100%;height:180px;margin-top:10px;"><canvas id="countryChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">First-time participants</div>
-        <div class="chart-sub">new vs returning volunteers</div>
-        <div style="position:relative;width:100%;height:200px;"><canvas id="firstTimeChart"></canvas></div>
+        <div style="position:relative;width:100%;height:180px;margin-top:10px;"><canvas id="firstTimeChart"></canvas></div>
       </div>
     </div>
-
-    <div class="section-label">Volunteer feedback — what they enjoyed</div>
-    <div id="fb-enjoyed-carousel-wrapper"></div>
 
     <div class="section-label">Insights</div>
     <div class="insight-row" id="insight-row"></div>
     <div class="callout"><div class="callout-text" id="callout-text"></div></div>
 
-    <div class="footer">Data ChangeMakers · Impact Report · Live from Google Sheets · Last updated: <span id="last-updated">—</span></div>
+    <div class="footer">Data ChangeMakers · Live from Google Sheets · Last updated: <span id="last-updated">—</span></div>
   </div>
 </div>
 
@@ -255,27 +251,20 @@ const SHEET2_TAB = 'All Submissions';
 const SHEET3_ID  = '1-fRkcHIc3-Md5hb8xaz2t4LarAGgLyR_jJuebgwVjCk';
 const SHEET3_TAB = 'Feedback';
 
-// Sheet 1 column indices (1-based)
+// Sheet 1 col indices (1-based mapping)
 const COL = {
-  DATE:2, CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6, STUDENTS:12, GRAND_TOTAL:15,
-  // Pre (green) / Post (purple) pairs - shifted by 1 to align with Grand Total being Col 15
-  PRE_DATA:16,      POST_DATA:17,
-  PRE_LITERACY:18,  POST_LITERACY:19,
-  PRE_TOOLS:20,     POST_TOOLS:21,
-  PRE_IMPACT:22,    POST_IMPACT:23,
-  PRE_DECISIONS:24, POST_DECISIONS:25,
-  // Satisfaction-only cols (no pre)
-  SAT_DCM:28, SAT_PARTNER:29, SAT_PROGRAMS:31, SAT_MEASURE:32, SAT_OVERALL:34,
-  LIKELY_RECOMMEND:35, QUOTES:36,
+  DATE: 2, CHARITY: 3, TYPE: 4, VOLS_PROJECT: 5, HOURS_PROJECT: 6, 
+  STUDENTS: 12, ATTENDEES: 13, GRAND_TOTAL: 15,
+  PRE_DATA: 16, POST_DATA: 17, PRE_LITERACY: 18, POST_LITERACY: 19,
+  PRE_TOOLS: 20, POST_TOOLS: 21, PRE_IMPACT: 22, POST_IMPACT: 23,
+  PRE_DECISIONS: 24, POST_DECISIONS: 25,
+  SAT_DCM: 28, SAT_PARTNER: 29, SAT_PROGRAMS: 31, SAT_MEASURE: 32, SAT_OVERALL: 34,
+  LIKELY_RECOMMEND: 35, QUOTES: 36,
 };
 
-// Sheet 3 (volunteer feedback) col indices
-const FB = { OVERALL:7, CHARITY_Q:8, DATA:9, SUPPORT:10, LIVE:11, ENJOYED:12 };
+// Sheet 2 col indices
+const VOL = { SKILL: 9, COUNTRY: 10, CITY: 11, FIRST_TIME: 13, TOOL: 14 };
 
-// Sheet 2 (volunteer submissions) col indices
-const VOL = { SKILL:9, COUNTRY:10, CITY:11, FIRST_TIME:13, TOOL:14 };
-
-// Pre/post pairs definition
 const PRE_POST_PAIRS = [
   { label:'Confident discussing & using data internally', pre:COL.PRE_DATA,      post:COL.POST_DATA },
   { label:'Overall data literacy is strong',              pre:COL.PRE_LITERACY,  post:COL.POST_LITERACY },
@@ -284,7 +273,6 @@ const PRE_POST_PAIRS = [
   { label:'Making decisions based on data',               pre:COL.PRE_DECISIONS, post:COL.POST_DECISIONS },
 ];
 
-// Satisfaction-only questions
 const SAT_QUESTIONS = [
   { col:COL.SAT_DCM,      label:'Quality of DCM support & contributions' },
   { col:COL.SAT_PARTNER,  label:'Likely to partner with DCM again' },
@@ -294,22 +282,9 @@ const SAT_QUESTIONS = [
 ];
 
 let charts = {};
-
-// Cache for raw loaded sheet data to support local filtering
-let rawRows1 = null;
-let rawRows2 = null;
-let rawRows3 = null;
-
-// Stores filtered list of parsed organisations for localized filter operations
 let activeOrgs = [];
-
-// Rotating partner quote carousel variables
-let partnerQuoteActiveIndex = 0;
-let partnerQuoteRotateInterval = null;
-
-// Rotating volunteer quote carousel variables
-let volQuoteActiveIndex = 0;
-let volQuoteRotateInterval = null;
+let rawRows2 = [];
+let rawRows3 = [];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
@@ -317,46 +292,20 @@ function n(row, col) { const val = parseFloat(v(row,col).replace(/[$,]/g,'')); r
 function avg(arr)    { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 function fmt(x)      { return x !== null ? (x%1===0 ? x : x.toFixed(1)) : null; }
 function countBy(arr){ return arr.reduce((acc,val)=>{ if(!val||val==='') return acc; acc[val]=(acc[val]||0)+1; return acc; },{}); }
-function topN(obj,n) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function topN(obj,num){ return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,num); }
 function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
 
-function getYearFromValue(val) {
-  if (!val) return null;
-  const s = String(val).trim();
-  const match = s.match(/\b(20\d{2})\b/);
-  if (match) return parseInt(match[1]);
-  const d = new Date(s);
-  if (!isNaN(d.getTime())) return d.getFullYear();
-  return null;
+function parseDate(val) {
+  if (!val) return 0;
+  // If gviz returns date string like "7-Nov-2025" or "14-May-2026", JS Date parses it beautifully.
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
-async function fetchSheet(id, tab, skip=0) {
-  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Network failure querying sheet: ${tab}`);
-  const text = await response.text();
-  
-  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-  if (!match) throw new Error(`Format validation error parsing sheet: ${tab}`);
-  
-  const json = JSON.parse(match[1]);
-  if (json.status === 'error') {
-    throw new Error(json.errors[0]?.detailed_message || `Authority execution error reading: ${tab}`);
-  }
-  
-  const table = json.table;
-  let rawRows = table.rows.map(r => {
-    return r.c.map(cell => {
-      if (!cell) return '';
-      return cell.v !== null && cell.v !== undefined ? cell.v : '';
-    });
-  });
-  
-  if (skip > 0) {
-    rawRows = rawRows.slice(skip);
-  }
-  
-  return rawRows.filter(r => r.some(c => String(c).trim() !== ''));
+function cleanName(str) {
+  if (!str) return '';
+  // Convert to lowercase and strip absolutely every space and symbol for flawless fuzzy matching
+  return String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function starHtml(val, color) {
@@ -364,400 +313,240 @@ function starHtml(val, color) {
   return Array.from({length:5},(_,i)=>`<span style="color:${i<f?color:'#d3d1c7'};font-size:16px;">★</span>`).join('');
 }
 
-// ── Year dropdown populator ───────────────────────────────────────────────────
-function populateYearFilter(rows) {
-  const select = document.getElementById('year-filter');
-  if (!select) return;
-  const currentSelection = select.value || 'all';
+// ── Fetch Logic ────────────────────────────────────────────────────────────────
+async function fetchSheet(id, tab) {
+  // CRITICAL FIX: headers=1 ensures row 1 is treated as header, and row 2 (Bhumi) is kept in data rows!
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(tab)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Network failure querying sheet: ${tab}`);
+  const text = await response.text();
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if (!match) throw new Error(`Format validation error parsing sheet: ${tab}`);
+  const json = JSON.parse(match[1]);
+  if (json.status === 'error') throw new Error(json.errors[0]?.detailed_message || `Execution error reading: ${tab}`);
+  
+  // Extract values, preferring formatted string (cell.f) for dates, falling back to raw value (cell.v)
+  return json.table.rows.map(r => r.c.map(cell => (cell ? (cell.f || cell.v || '') : '')));
+}
 
-  const years = new Set();
-  rows.forEach(row => {
-    const dVal = v(row, COL.DATE);
-    const yr = getYearFromValue(dVal);
-    if (yr) years.add(yr);
-  });
+// ── UI Interactions ────────────────────────────────────────────────────────────
+function switchPanel(panel, btn) {
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('panel-impact').style.display = panel === 'impact' ? 'block' : 'none';
+  document.getElementById('panel-sat').style.display = panel === 'sat' ? 'block' : 'none';
+  document.getElementById('panel-vol').style.display = panel === 'vol' ? 'block' : 'none';
+}
 
-  const sortedYears = Array.from(years).sort((a,b)=> b - a);
-  select.innerHTML = '<option value="all">All years</option>';
-  sortedYears.forEach(y => {
-    select.innerHTML += `<option value="${y}">${y}</option>`;
-  });
+function toggleDrawer(id) {
+  const row = document.getElementById(id);
+  const drawer = document.getElementById(id + '-drawer');
+  if (!row || !drawer) return;
+  const isOpen = row.classList.contains('open');
+  
+  document.querySelectorAll('.expandable-row').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('.drawer-row').forEach(d => d.classList.remove('open'));
 
-  if (years.has(parseInt(currentSelection))) {
-    select.value = currentSelection;
-  } else {
-    select.value = 'all';
+  if (!isOpen) {
+    row.classList.add('open');
+    drawer.classList.add('open');
   }
 }
 
-// ── Project Type dropdown populator ───────────────────────────────────────────
-function populateTypeFilter(orgsList) {
-  const select = document.getElementById('type-filter');
-  if (!select) return;
-  const currentSelection = select.value || 'all';
+// ── Formatting Helpers ─────────────────────────────────────────────────────────
+function getTypeInfo(types) {
+  const arr = [...types];
+  if(arr.length > 1) return {label:'Multiple', badge:'badge-multi'};
+  const t = arr[0] || '';
+  if(t.includes('visuali')) return {label:'Data viz', badge:'badge-viz'};
+  if(t.includes('wrangle')) return {label:'Data wrangling', badge:'badge-multi'};
+  if(t.includes('learn') || t.includes('educat')) return {label:'Learning', badge:'badge-edu'};
+  if(t.includes('health')) return {label:'Health check', badge:'badge-health'};
+  if(t.includes('webinar')) return {label:'Webinar', badge:'badge-edu'};
+  if(t.includes('conference')) return {label:'Conference', badge:'badge-edu'};
+  return {label: t || '—', badge:'badge-viz'};
+}
 
+function populateTypeFilter() {
+  const select = document.getElementById('type-filter');
   const types = new Set();
-  orgsList.forEach(o => {
+  activeOrgs.forEach(o => {
     const {label} = getTypeInfo(o.types);
     if (label && label !== '—') types.add(label);
   });
-
   const sortedTypes = Array.from(types).sort();
   select.innerHTML = '<option value="all">All types</option>';
-  sortedTypes.forEach(t => {
-    select.innerHTML += `<option value="${t}">${t}</option>`;
-  });
-
-  if (types.has(currentSelection)) {
-    select.value = currentSelection;
-  } else {
-    select.value = 'all';
-  }
+  sortedTypes.forEach(t => { select.innerHTML += `<option value="${t}">${t}</option>`; });
 }
 
-// ── Render table rows with local filter mapping ──────────────────────────────
-function renderTableRows() {
-  const select = document.getElementById('type-filter');
-  const currentType = select ? select.value : 'all';
+function applyTableFilters() {
+  const typeFilter = document.getElementById('type-filter').value;
+  const sortFilter = document.getElementById('sort-filter').value;
   const tbody = document.getElementById('proj-tbody');
-  if (!tbody) return;
-
-  const filtered = currentType === 'all' 
-    ? activeOrgs 
-    : activeOrgs.filter(o => getTypeInfo(o.types).label === currentType);
-
-  tbody.innerHTML = filtered.map(o=>{
-    const {label,badge}=getTypeInfo(o.types);
-    return `<tr>
-      <td style="font-weight:500;">${o.name}</td>
-      <td><span class="badge ${badge}">${label}</span></td>
-      <td>${Math.round(o.hours).toLocaleString()}</td>
-    </tr>`;
-  }).join('');
-}
-
-function filterTableByType() {
-  renderTableRows();
-}
-
-// ── Apply year selection and render dashboard locally ───────────────────────
-function applyFiltersAndRender() {
-  if (!rawRows1 || !rawRows2 || !rawRows3) return;
-
-  const select = document.getElementById('year-filter');
-  const selectedYear = select ? select.value : 'all';
-
-  let filteredRows1 = rawRows1;
-  if (selectedYear !== 'all') {
-    const targetYear = parseInt(selectedYear);
-    filteredRows1 = rawRows1.filter(row => {
-      const dVal = v(row, COL.DATE);
-      return getYearFromValue(dVal) === targetYear;
-    });
-  }
-
-  renderDashboard(filteredRows1, rawRows2, rawRows3);
-}
-
-// Global year filter trigger
-function filterByYear() {
-  applyFiltersAndRender();
-}
-
-// ── Data loading process ───────────────────────────────────────────────────────
-async function loadAll() {
-  const dot = document.getElementById('status-dot');
-  const lbl = document.getElementById('refresh-label');
-  dot.classList.remove('live');
-  lbl.textContent = 'Loading...';
-  document.getElementById('error-area').innerHTML = '';
-  document.getElementById('loading-area').style.display = 'block';
-  document.getElementById('dashboard').style.display = 'none';
-  try {
-    const [rows1,rows2,rows3] = await Promise.all([
-      fetchSheet(SHEET1_ID,SHEET1_TAB,0),
-      fetchSheet(SHEET2_ID,SHEET2_TAB,0),
-      fetchSheet(SHEET3_ID,SHEET3_TAB,0),
-    ]);
-    rawRows1 = rows1;
-    rawRows2 = rows2;
-    rawRows3 = rows3;
-
-    populateYearFilter(rawRows1);
-    applyFiltersAndRender();
-
-    dot.classList.add('live');
-    lbl.textContent = 'Refresh data';
-    document.getElementById('last-updated').textContent = new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
-    document.getElementById('loading-area').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-  } catch(err) {
-    document.getElementById('loading-area').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('error-area').innerHTML =
-      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>Make sure all sheets are shared as "Anyone with the link can view".</div>`;
-    lbl.textContent = 'Retry';
-  }
-}
-
-// ── Org data helpers ───────────────────────────────────────────────────────────
-function mergeOrgs(rows) {
-  return rows.map(row=>{
-    const raw = v(row,COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
-    const type = v(row,COL.TYPE).toLowerCase();
-    const rowHours = n(row,COL.GRAND_TOTAL) !== null ? n(row,COL.GRAND_TOTAL) : (n(row,COL.HOURS_PROJECT)||0);
-    const sat = n(row,COL.SAT_OVERALL);
-    const q   = v(row,COL.QUOTES);
-    const isExcluded = type.includes('learning') || type.includes('educat') || type.includes('webinar') || type.includes('conference');
-    const isViz = !isExcluded;
-    return {
-      name:raw, types:new Set([type]),
-      vols:n(row,COL.VOLS_PROJECT)||0,
-      hours:rowHours, vizHours:isViz?rowHours:0,
-      students:n(row,COL.STUDENTS)||0,
-      sat:sat?[sat]:[],
-      quotes:q?[{text:q,org:raw}]:[],
-      surveyRows:[row],
-    };
-  }).filter(o=>o.name);
-}
-
-function getTypeInfo(types) {
-  const arr=[...types];
-  if(arr.length>1) return {label:'Multiple',badge:'badge-multi'};
-  const t=arr[0]||'';
-  if(t.includes('visuali')) return {label:'Data viz',badge:'badge-viz'};
-  if(t.includes('wrangle')) return {label:'Data wrangling',badge:'badge-multi'};
-  if(t.includes('learn')||t.includes('educat')) return {label:'Learning',badge:'badge-edu'};
-  if(t.includes('health')) return {label:'Health check',badge:'badge-health'};
-  return {label:t||'—',badge:'badge-viz'};
-}
-
-// ── Panel toggles ──────────────────────────────────────────────────────────────
-function switchTab(tab, btn) {
-  document.querySelectorAll('.chart-card .stab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  if (tab === 'org') {
-    document.getElementById('org-panel-prepost').style.display = 'block';
-    document.getElementById('org-panel-sat').style.display = 'none';
-    document.getElementById('panel-vol').style.display = 'none';
-  } 
-  else if (tab === 'sat') {
-    document.getElementById('org-panel-prepost').style.display = 'none';
-    document.getElementById('org-panel-sat').style.display = 'block';
-    document.getElementById('panel-vol').style.display = 'none';
-  } 
-  else if (tab === 'vol') {
-    document.getElementById('org-panel-prepost').style.display = 'none';
-    document.getElementById('org-panel-sat').style.display = 'none';
-    document.getElementById('panel-vol').style.display = 'block';
-  }
-}
-
-// ── Partner Quotes Carousel Logic ──
-function startPartnerQuoteTimer() {
-  stopPartnerQuoteTimer();
-  partnerQuoteRotateInterval = setInterval(() => {
-    navigatePartnerQuote(1);
-  }, 5500);
-}
-
-function stopPartnerQuoteTimer() {
-  if (partnerQuoteRotateInterval) {
-    clearInterval(partnerQuoteRotateInterval);
-    partnerQuoteRotateInterval = null;
-  }
-}
-
-// Partner quote rendering and rotation
-function showPartnerQuote(index) {
-  const slides = document.querySelectorAll('.partner-carousel-slide');
-  const dots = document.querySelectorAll('.partner-carousel-dot');
-  if (!slides.length) return;
-
-  partnerQuoteActiveIndex = (index + slides.length) % slides.length;
-
-  slides.forEach((slide, idx) => {
-    if (idx === partnerQuoteActiveIndex) {
-      slide.classList.add('active');
-    } else {
-      slide.classList.remove('active');
-    }
-  });
-
-  dots.forEach((dot, idx) => {
-    if (idx === partnerQuoteActiveIndex) {
-      dot.classList.add('active');
-    } else {
-      dot.classList.remove('active');
-    }
-  });
-}
-
-function navigatePartnerQuote(direction) {
-  showPartnerQuote(partnerQuoteActiveIndex + direction);
-}
-
-function renderQuotesCarousel(quotes) {
-  const container = document.getElementById('quotes-carousel-wrapper');
-  if (!container) return;
   
-  if (!quotes || !quotes.length) {
-    container.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No testimonials available yet.</div>';
-    return;
+  let filtered = activeOrgs.slice();
+
+  // 1. Type Filter
+  if (typeFilter !== 'all') {
+    filtered = filtered.filter(o => getTypeInfo(o.types).label === typeFilter);
   }
 
-  partnerQuoteActiveIndex = 0;
-
-  const slidesHtml = quotes.map((q, idx) => {
-    const sentences = q.text.split(/[.!?][""]?\s+/);
-    const display   = sentences[0].length > 30 ? sentences[0] : sentences.slice(0,2).join('. ');
-    const clean     = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
-    const finalTxt  = clean + (clean.endsWith('.') ? '' : '.');
-    const activeClass = idx === 0 ? 'active' : '';
-
-    return `
-      <div class="carousel-slide partner-carousel-slide ${activeClass}">
-        <div class="quote-mark">"</div>
-        <div class="quote-text">${finalTxt}</div>
-        <div class="quote-org">${q.org}</div>
-      </div>
-    `;
-  }).join('');
-
-  const dotsHtml = quotes.map((_, idx) => {
-    const activeClass = idx === 0 ? 'active' : '';
-    return `<span class="carousel-dot partner-carousel-dot ${activeClass}" onclick="showPartnerQuote(${idx}); startPartnerQuoteTimer();"></span>`;
-  }).join('');
-
-  container.innerHTML = `
-    <div class="carousel-wrapper" onmouseenter="stopPartnerQuoteTimer()" onmouseleave="startPartnerQuoteTimer()">
-      <div class="carousel-container">
-        ${slidesHtml}
-      </div>
-      <div class="carousel-controls">
-        <button class="carousel-btn" onclick="navigatePartnerQuote(-1); startPartnerQuoteTimer();" title="Previous Testimonial">
-          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="carousel-dots">
-          ${dotsHtml}
-        </div>
-        <button class="carousel-btn" onclick="navigatePartnerQuote(1); startPartnerQuoteTimer();" title="Next Testimonial">
-          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-  `;
-
-  startPartnerQuoteTimer();
-}
-
-// ── Volunteer Quotes Carousel Logic ──
-function startVolQuoteTimer() {
-  stopVolQuoteTimer();
-  volQuoteRotateInterval = setInterval(() => {
-    navigateVolQuote(1);
-  }, 6000);
-}
-
-function stopVolQuoteTimer() {
-  if (volQuoteRotateInterval) {
-    clearInterval(volQuoteRotateInterval);
-    volQuoteRotateInterval = null;
-  }
-}
-
-function showVolQuote(index) {
-  const slides = document.querySelectorAll('.vol-carousel-slide');
-  const dots = document.querySelectorAll('.vol-carousel-dot');
-  if (!slides.length) return;
-
-  volQuoteActiveIndex = (index + slides.length) % slides.length;
-
-  slides.forEach((slide, idx) => {
-    if (idx === volQuoteActiveIndex) {
-      slide.classList.add('active');
-    } else {
-      slide.classList.remove('active');
-    }
+  // 2. Exact Sort
+  filtered.sort((a, b) => {
+    if (sortFilter === 'recent') return b.dateVal - a.dateVal;
+    if (sortFilter === 'oldest') return a.dateVal - b.dateVal;
+    return 0;
   });
 
-  dots.forEach((dot, idx) => {
-    if (idx === volQuoteActiveIndex) {
-      dot.classList.add('active');
-    } else {
-      dot.classList.remove('active');
+  // 3. Render HTML
+  tbody.innerHTML = filtered.map((o, idx) => {
+    const {label, badge} = getTypeInfo(o.types);
+    const isWebinar = o.types.has('webinar') || o.types.has('conference');
+    const isLearning = o.types.has('learning') || o.types.has('education') || o.types.has('learning/education');
+    
+    // Dynamic Labels based on project type
+    let statHtml = '';
+    if (isWebinar && o.attendees > 0) { 
+      statHtml = `<div><div class="drawer-label">People attended</div><div class="drawer-value">${o.attendees} attendees</div></div>`; 
+    } else if (isLearning && o.students > 0) { 
+      statHtml = `<div><div class="drawer-label">Students</div><div class="drawer-value">${o.students} students</div></div>`; 
+    } else if (o.vols > 0) {
+      statHtml = `<div><div class="drawer-label">Volunteers involved</div><div class="drawer-value">${o.vols} volunteers</div></div>`;
     }
-  });
-}
 
-function navigateVolQuote(direction) {
-  showVolQuote(volQuoteActiveIndex + direction);
-}
-
-function renderFeedback(rows3) {
-  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
-  const el = document.getElementById('fb-enjoyed-carousel-wrapper');
-  if (!el) return;
-
-  if (!fbRows.length) {
-    el.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No volunteer feedback available yet.</div>';
-    return;
-  }
-
-  // Grab rich responses, order from latest to oldest
-  const enjoyed = fbRows.map(r => v(r, FB.ENJOYED)).filter(t => t.length > 15).reverse();
-  if (!enjoyed.length) {
-    el.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No detailed feedback comments yet.</div>';
-    return;
-  }
-
-  // Support up to 10 feedback rotating cards
-  const maxQuotes = enjoyed.slice(0, 10);
-  volQuoteActiveIndex = 0;
-
-  const slidesHtml = maxQuotes.map((txt, idx) => {
-    const activeClass = idx === 0 ? 'active' : '';
-    return `
-      <div class="carousel-slide vol-carousel-slide ${activeClass}">
-        <div class="quote-mark">"</div>
-        <div class="quote-text">${txt}</div>
-        <div class="quote-org">Volunteer community response</div>
+    // Conditional HTML Blocks (Hidden completely if empty)
+    const orgFeedbackHtml = o.sat.length > 0 ? `
+      <div style="margin-bottom:16px;">
+        <div class="drawer-label">Org Feedback</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;gap:2px;">${starHtml(o.sat[0], '#1D9E75')}</div>
+          <span style="font-size:13px;font-weight:600;color:#1D9E75;">${o.sat[0]}/5</span>
+        </div>
       </div>
+    ` : '';
+
+    const testimonialHtml = o.quotes.length > 0 ? `
+      <div style="margin-bottom:16px;">
+        <div class="drawer-label">Testimonial</div>
+        <div class="quote-bubble">"${o.quotes[0].text}"</div>
+      </div>
+    ` : '';
+
+    // VOLUNTEER FEEDBACK MATCHING
+    const orgClean = cleanName(o.name);
+    const matchedFb = rawRows3.filter(r => {
+      const fbProjectRaw = String(r[1] || ''); // Col B (index 1 in 0-based array)
+      const fbProjectClean = cleanName(fbProjectRaw);
+      // Ensure match works safely by checking if one contains the other.
+      return fbProjectClean.length > 2 && (fbProjectClean.includes(orgClean) || orgClean.includes(fbProjectClean));
+    });
+
+    let volFeedbackHtml = '';
+    if (matchedFb.length > 0) {
+      const calcAvg = (colIdx) => {
+        // Col indices based on screenshot mapping (0-based indexing):
+        // Col G = index 6 (Overall), Col H = index 7 (Charity), etc.
+        const vals = matchedFb.map(r => parseFloat(r[colIdx])).filter(x => !isNaN(x) && x > 0);
+        return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+      };
+
+      const metrics = [
+        { name: 'Overall experience', val: calcAvg(6) },
+        { name: 'Charity choice', val: calcAvg(7) },
+        { name: 'Data & instructions', val: calcAvg(8) },
+        { name: 'DCM support', val: calcAvg(9) },
+        { name: 'Live event format', val: calcAvg(10) }
+      ].filter(m => m.val !== null);
+
+      if (metrics.length > 0) {
+        volFeedbackHtml = `
+          <div style="margin-bottom:16px;">
+            <div class="drawer-label">Volunteer Feedback</div>
+            <div style="background:#fff;border:0.5px solid #e0deda;border-radius:8px;padding:12px;">
+              ${metrics.map(m => `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;">
+                  <span style="color:#555;">${m.name}</span>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="display:flex;gap:1px;">${starHtml(m.val, '#ef9f27')}</div>
+                    <span style="font-weight:600;color:#ef9f27;width:24px;text-align:right;">${fmt(m.val)}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    const rowId = `org-row-${idx}`;
+    return `
+      <tr class="expandable-row" id="${rowId}" onclick="toggleDrawer('${rowId}')">
+        <td style="font-weight:500;">
+          <div style="font-size:13px;">${o.name}</div>
+          <div style="font-size:10px; color:#1d9e75; margin-top:4px; font-weight:600; display:flex; align-items:center;">
+              <span class="toggle-icon">▶</span> View details
+          </div>
+        </td>
+        <td><span class="badge ${badge}">${label}</span></td>
+        <td style="font-weight:500;">${Math.round(o.hours).toLocaleString()} hrs</td>
+      </tr>
+      <tr class="drawer-row" id="${rowId}-drawer">
+        <td colspan="3" style="padding:0;">
+          <div class="drawer-content">
+            <div class="drawer-grid">
+              <div>
+                <div style="margin-bottom:16px;">
+                  <div class="drawer-label">Project Description</div>
+                  <div class="drawer-value">${o.typeString || label}</div>
+                </div>
+                <div style="display:flex; gap:40px; margin-bottom:16px;">
+                  ${statHtml}
+                  <div>
+                    <div class="drawer-label">Hours Spent</div>
+                    <div class="drawer-value" style="font-weight:500;">${Math.round(o.hours).toLocaleString()} hrs</div>
+                  </div>
+                </div>
+                ${orgFeedbackHtml}
+              </div>
+              <div>
+                ${testimonialHtml}
+                ${volFeedbackHtml}
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
     `;
   }).join('');
+}
 
-  const dotsHtml = maxQuotes.map((_, idx) => {
-    const activeClass = idx === 0 ? 'active' : '';
-    return `<span class="carousel-dot vol-carousel-dot ${activeClass}" onclick="showVolQuote(${idx}); startVolQuoteTimer();"></span>`;
-  }).join('');
-
-  el.innerHTML = `
-    <div class="carousel-wrapper" onmouseenter="stopVolQuoteTimer()" onmouseleave="startVolQuoteTimer()">
-      <div class="carousel-container">
-        ${slidesHtml}
-      </div>
-      <div class="carousel-controls">
-        <button class="carousel-btn" onclick="navigateVolQuote(-1); startVolQuoteTimer();" title="Previous Feedback">
-          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="carousel-dots">
-          ${dotsHtml}
-        </div>
-        <button class="carousel-btn" onclick="navigateVolQuote(1); startVolQuoteTimer();" title="Next Feedback">
-          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-  `;
-
-  startVolQuoteTimer();
+function mergeOrgs(rows) {
+  return rows.map((row, index) => {
+    const rawName = v(row, COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
+    const typeStr = v(row, COL.TYPE).toLowerCase();
+    const rowHours = n(row, COL.GRAND_TOTAL) !== null ? n(row, COL.GRAND_TOTAL) : (n(row, COL.HOURS_PROJECT) || 0);
+    const sat = n(row, COL.SAT_OVERALL);
+    const q   = v(row, COL.QUOTES);
+    
+    return {
+      id: `org-${index}`,
+      name: rawName,
+      typeString: v(row, COL.TYPE),
+      types: new Set([typeStr]),
+      vols: n(row, COL.VOLS_PROJECT) || 0,
+      hours: rowHours,
+      students: n(row, COL.STUDENTS) || 0,
+      attendees: n(row, COL.ATTENDEES) || 0,
+      dateVal: parseDate(v(row, COL.DATE)),
+      sat: sat ? [sat] : [],
+      quotes: q ? [{text: q, org: rawName}] : [],
+      surveyRows: [row],
+    };
+  }).filter(o => o.name.length > 1);
 }
 
 function renderImpactPairs(orgs) {
   const el = document.getElementById('impact-pairs');
-  if (!el) return;
   el.innerHTML = PRE_POST_PAIRS.map(pair=>{
     const preVals=[], postVals=[];
     orgs.forEach(o=>o.surveyRows.forEach(row=>{
@@ -768,11 +557,9 @@ function renderImpactPairs(orgs) {
     const preAvg  = preVals.length  ? avg(preVals)  : null;
     const postAvg = postVals.length ? avg(postVals) : null;
     const delta   = preAvg!==null && postAvg!==null ? postAvg-preAvg : null;
-
-    let pillHtml;
-    if (delta===null) {
-      pillHtml = `<span class="delta-pill delta-none">—</span>`;
-    } else {
+    
+    let pillHtml = `<span class="delta-pill delta-none">—</span>`;
+    if (delta !== null) {
       const sign  = delta>0?'+':delta<0?'':' ';
       const cls   = delta>0?'delta-up':delta<0?'delta-dn':'delta-eq';
       const arrow = delta>0?'↑':delta<0?'↓':'';
@@ -790,277 +577,200 @@ function renderImpactPairs(orgs) {
   }).join('');
 }
 
-function renderSatisfactionRatings(orgs) {
-  const el = document.getElementById('sat-ratings');
-  if (!el) return;
-  el.innerHTML = '<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Post-project satisfaction scores (1–5)</div>' +
-    SAT_QUESTIONS.map(q=>{
-      const vals = [];
-      orgs.forEach(o=>o.surveyRows.forEach(row=>{ const val=n(row,q.col); if(val) vals.push(val); }));
-      if (!vals.length) return `<div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:#888780;margin-bottom:4px;">${q.label}</div>
-        <div style="font-size:11px;color:#d3d1c7;">No data yet</div>
-      </div>`;
-      const a   = avg(vals);
-      const rd  = Math.round(a*10)/10;
-      const disp= rd%1===0 ? Math.round(rd) : rd.toFixed(1);
-      return `<div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="display:flex;gap:2px;">${starHtml(a,'#ef9f27')}</div>
-          <span style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</span>
-          <span style="font-size:11px;color:#b4b2a9;">(${vals.length} response${vals.length>1?'s':''})</span>
-        </div>
-      </div>`;
-    }).join('');
-}
-
-function renderInlineFeedback(rows3) {
-  const fbRows = (rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const el = document.getElementById('inline-fb-ratings');
-  if (!el) return;
-  if (!fbRows.length) { el.innerHTML='<div style="font-size:12px;color:#b4b2a9;padding-top:8px;">No feedback data yet.</div>'; return; }
-  const keys=[
-    {col:FB.OVERALL,   label:'Overall experience'},
-    {col:FB.CHARITY_Q, label:'Charity choice'},
-    {col:FB.DATA,      label:'Data & instructions'},
-    {col:FB.SUPPORT,   label:'DCM support'},
-    {col:FB.LIVE,      label:'Live event format'},
-  ];
-  el.innerHTML = `<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">${fbRows.length} responses · avg ratings out of 5</div>` +
-    keys.map(({col,label})=>{
-      const vals=fbRows.map(r=>n(r,col)).filter(x=>x>0);
-      if(!vals.length) return '';
-      const a=avg(vals), rd=Math.round(a*10)/10, disp=rd%1===0?Math.round(rd):rd.toFixed(1);
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div>
-        <div style="display:flex;gap:3px;">${starHtml(a,'#ef9f27')}</div>
-        <div style="font-size:12px;font-weight:500;color:#ef9f27;">${disp}/5</div>
-      </div>`;
-    }).join('');
-}
-
 function renderDashboard(rows1, rows2, rows3) {
-  const orgs = mergeOrgs(rows1.filter(r=>v(r,COL.CHARITY).length>1));
-  const uniqueOrgCount = new Set(orgs.map(o=>o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
+  rawRows2 = rows2;
+  rawRows3 = rows3;
 
-  const totalHours    = orgs.reduce((s,o)=>s+o.hours,0);
-  const totalVols     = orgs.reduce((s,o)=>s+o.vols,0);
-  const allSat        = orgs.flatMap(o=>o.sat);
+  activeOrgs = mergeOrgs(rows1);
+
+  // Initialize UI filters and trigger table build (which handles the default sorting)
+  populateTypeFilter();
+  document.getElementById('sort-filter').value = 'recent'; 
+  applyTableFilters();
+
+  const uniqueOrgCount = new Set(activeOrgs.map(o=>o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
+  const totalHours    = activeOrgs.reduce((s,o)=>s+o.hours,0);
+  const totalVols     = activeOrgs.reduce((s,o)=>s+o.vols,0);
+  const allSat        = activeOrgs.flatMap(o=>o.sat);
   const avgSat        = avg(allSat);
-  const avgHrsPerProj = orgs.length ? Math.round(totalHours/orgs.length) : 0;
+  const avgHrsPerProj = activeOrgs.length ? Math.round(totalHours/activeOrgs.length) : 0;
 
-  document.getElementById('subtitle').textContent =
-    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${totalVols} volunteers`;
+  document.getElementById('subtitle').textContent = `Impact dashboard — ${uniqueOrgCount} organisations · ${activeOrgs.length} projects · ${totalVols} volunteers`;
 
-  const fbRows        = (rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const fbOverallVals = fbRows.map(r=>n(r,FB.OVERALL)).filter(x=>x>0);
-  const volOverallAvg = fbOverallVals.length ? avg(fbOverallVals) : null;
-
-  // Key numbers
+  // Top Metrics
   document.getElementById('metric-grid').innerHTML = `
-    <div class="metric metric-accent">
-      <div class="metric-label">Volunteer hours</div>
-      <div class="metric-value">${totalHours.toLocaleString()}</div>
-      <div class="metric-sub">across all projects</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Volunteers</div>
-      <div class="metric-value">${totalVols}</div>
-      <div class="metric-sub">total participants</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Nonprofits served</div>
-      <div class="metric-value">${uniqueOrgCount}</div>
-      <div class="metric-sub">unique organisations</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Avg hours / project</div>
-      <div class="metric-value">${avgHrsPerProj}</div>
-      <div class="metric-sub">volunteer hours avg</div>
-    </div>
-    ${avgSat ? `<div class="metric">
-      <div class="metric-label">Organisation feedback</div>
-      <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        ${starHtml(avgSat,'#ef9f27')}
-        <span style="font-size:13px;font-weight:400;color:#888780;">${avgSat%1===0?avgSat:avgSat.toFixed(1)}/5</span>
-      </div>
-      <div class="metric-sub">post-project survey avg</div>
-    </div>` : ''}
-    ${volOverallAvg ? `<div class="metric">
-      <div class="metric-label">Volunteer overall exp.</div>
-      <div class="metric-value" style="font-size:18px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        ${starHtml(volOverallAvg,'#ef9f27')}
-        <span style="font-size:13px;font-weight:400;color:#888780;">${volOverallAvg%1===0?Math.round(volOverallAvg):volOverallAvg.toFixed(1)}/5</span>
-      </div>
-      <div class="metric-sub">volunteer feedback avg</div>
-    </div>` : ''}
+    <div class="metric metric-accent"><div class="metric-label">Volunteer hours</div><div class="metric-value">${totalHours.toLocaleString()}</div><div class="metric-sub">across all projects</div></div>
+    <div class="metric"><div class="metric-label">Volunteers</div><div class="metric-value">${totalVols}</div><div class="metric-sub">total participants</div></div>
+    <div class="metric"><div class="metric-label">Nonprofits served</div><div class="metric-value">${uniqueOrgCount}</div><div class="metric-sub">unique organisations</div></div>
+    <div class="metric"><div class="metric-label">Avg hours / project</div><div class="metric-value">${avgHrsPerProj}</div><div class="metric-sub">volunteer hours avg</div></div>
   `;
 
-  // Hours chart
-  const vizOrgs = orgs.filter(o=>o.vizHours>0);
+  // Hours Chart (Excluding Learning/Webinar/Conference)
+  const chartOrgs = activeOrgs.filter(o => {
+    if (o.hours <= 0) return false;
+    const t = getTypeInfo(o.types).label.toLowerCase();
+    return !t.includes('learning') && !t.includes('webinar') && !t.includes('conference');
+  });
+
   destroyChart('hours');
   charts.hours = new Chart(document.getElementById('hoursChart'),{
     type:'bar',
     data:{
-      labels:vizOrgs.map(o=>o.name), 
-      datasets:[{data:vizOrgs.map(o=>o.vizHours),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]
+      labels: chartOrgs.map(o => o.name),
+      datasets:[{data: chartOrgs.map(o=>o.hours), backgroundColor:'#1D9E75', borderRadius:4, borderSkipped:false}]
     },
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{
+      responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
-        tooltip:{
-          padding:12,
-          titleFont:{size:13,weight:'600'},
-          bodyFont:{size:12},
-          callbacks:{label:ctx=>ctx.raw.toLocaleString()+' hrs'}
+        tooltip: {
+          titleFont: { size: 14, family: 'Inter, sans-serif' },
+          bodyFont: { size: 13, weight: 'bold' },
+          padding: 12,
+          callbacks: { label: ctx => ctx.raw.toLocaleString() + ' hrs' }
         }
       },
       scales:{
-        x:{
-          ticks:{
-            font:{size:10},
-            maxRotation:45,
-            autoSkip:false,
-            callback: function(val, index) {
-              const label = this.getLabelForValue(val);
-              return label.length > 14 ? label.slice(0, 13) + '…' : label;
-            }
-          },
-          grid:{display:false}
-        },
-        y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
+        x:{ticks:{font:{size:10}, maxRotation:45, callback: function(val) { const lbl = this.getLabelForValue(val); return lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl; } }, grid:{display:false}},
+        y:{ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'}}
       }
     }
   });
 
-  // Impact panels
-  renderImpactPairs(orgs);
-  renderSatisfactionRatings(orgs);
+  // Impact Panels
+  renderImpactPairs(activeOrgs);
+  
+  // Satisfaction Ratings (Org Side)
+  document.getElementById('sat-ratings').innerHTML = '<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">Post-project satisfaction scores (1–5)</div>' +
+    SAT_QUESTIONS.map(q=>{
+      const vals = [];
+      activeOrgs.forEach(o=>o.surveyRows.forEach(row=>{ const val=n(row,q.col); if(val) vals.push(val); }));
+      if (!vals.length) return `<div style="margin-bottom:12px;"><div style="font-size:12px;color:#888780;margin-bottom:4px;">${q.label}</div><div style="font-size:11px;color:#d3d1c7;">No data yet</div></div>`;
+      const a = avg(vals);
+      return `<div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:#888780;margin-bottom:5px;line-height:1.4;">${q.label}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;gap:2px;">${starHtml(a,'#ef9f27')}</div>
+          <span style="font-size:12px;font-weight:500;color:#ef9f27;">${fmt(a)}/5</span>
+        </div>
+      </div>`;
+    }).join('');
 
-  // Render rotating partner quotes
-  const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20);
-  renderQuotesCarousel(allQuotes);
+  // Inline Feedback Ratings (Vol Side - overall averages from sheet 3, Col G-K index 6-10)
+  const fbRows = rows3.filter(r => String(r[6] || '').trim() !== ''); // Check Col G has data
+  const inlineEl = document.getElementById('inline-fb-ratings');
+  if (fbRows.length > 0) {
+    const keys = [
+      {col: 6, label: 'Overall experience'}, {col: 7, label: 'Charity choice'},
+      {col: 8, label: 'Data & instructions'}, {col: 9, label: 'DCM support'}, {col: 10, label: 'Live event format'}
+    ];
+    inlineEl.innerHTML = `<div style="font-size:11px;color:#b4b2a9;margin-bottom:12px;">avg ratings out of 5 across all submissions</div>` +
+      keys.map(({col,label}) => {
+        const vals = fbRows.map(r => parseFloat(r[col])).filter(x => !isNaN(x) && x > 0);
+        if(!vals.length) return '';
+        const a = vals.reduce((sum,v)=>sum+v,0)/vals.length;
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div style="font-size:12px;color:#888780;width:130px;flex-shrink:0;">${label}</div><div style="display:flex;gap:3px;">${starHtml(a,'#ef9f27')}</div><div style="font-size:12px;font-weight:500;color:#ef9f27;">${fmt(a)}/5</div></div>`;
+      }).join('');
+  }
 
-  // Save to active state and trigger the table rendering & filtering
-  activeOrgs = orgs;
-  populateTypeFilter(activeOrgs);
-  renderTableRows();
-
-  // Volunteer section
+  // Volunteers Section Logic
   const volRows   = rows2.filter(r=>v(r,VOL.SKILL)||v(r,VOL.COUNTRY)||v(r,VOL.TOOL));
   const skills    = volRows.map(r=>v(r,VOL.SKILL)).filter(Boolean);
   const countries = volRows.map(r=>v(r,VOL.COUNTRY)).filter(Boolean);
   const tools     = volRows.flatMap(r=>v(r,VOL.TOOL).split(/[,;/]/).map(t=>t.trim())).filter(Boolean);
   const firstTime = volRows.map(r=>v(r,VOL.FIRST_TIME)).filter(Boolean);
+  
   const uniqueCountries = new Set(countries).size;
   const uniqueCities    = new Set(volRows.map(r=>v(r,VOL.CITY)).filter(Boolean)).size;
   const firstTimers     = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
 
-  // Stat Grid updated: first card now displays totalVols
   document.getElementById('vol-stat-row').innerHTML = `
-    <div class="metric">
-      <div class="metric-label">Volunteers</div>
-      <div class="metric-value">${totalVols}</div>
-      <div class="metric-sub">volunteer entries</div>
-    </div>
-    <div class="metric metric-accent">
-      <div class="metric-label">Countries</div>
-      <div class="metric-value">${uniqueCountries}</div>
-      <div class="metric-sub">represented</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Cities</div>
-      <div class="metric-value">${uniqueCities}</div>
-      <div class="metric-sub">volunteer locations</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">First-timers</div>
-      <div class="metric-value">${firstTimePct}%</div>
-      <div class="metric-sub">new to programme</div>
-    </div>
+    <div class="metric"><div class="metric-label">Volunteers</div><div class="metric-value">${totalVols}</div><div class="metric-sub">volunteer entries</div></div>
+    <div class="metric metric-accent"><div class="metric-label">Countries</div><div class="metric-value">${uniqueCountries}</div><div class="metric-sub">represented</div></div>
+    <div class="metric"><div class="metric-label">Cities</div><div class="metric-value">${uniqueCities}</div><div class="metric-sub">volunteer locations</div></div>
+    <div class="metric"><div class="metric-label">First-timers</div><div class="metric-value">${firstTimePct}%</div><div class="metric-sub">new to programme</div></div>
   `;
 
-  // Charts
+  // Render 4 Volunteer Charts
   const skillCounts = countBy(skills);
   const skillOrder  = ['Beginner','Intermediate','Advanced','Expert'];
   const skillLabels = skillOrder.filter(s=>skillCounts[s]);
-  const skillVals   = skillLabels.map(s=>skillCounts[s]||0);
   destroyChart('skill');
   charts.skill = new Chart(document.getElementById('skillChart'),{
-    type:'bar',
-    data:{labels:skillLabels.length?skillLabels:Object.keys(skillCounts),
-      datasets:[{data:skillLabels.length?skillVals:Object.values(skillCounts),
-        backgroundColor:['#378ADD','#534AB7','#1D9E75','#0F6E56'],borderRadius:4,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}}},
-      scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}}}}
+    type:'bar', data:{labels:skillLabels, datasets:[{data:skillLabels.map(s=>skillCounts[s]||0), backgroundColor:['#378ADD','#534AB7','#1D9E75','#0F6E56'], borderRadius:4}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{ticks:{stepSize:1}, grid:{color:'rgba(0,0,0,0.04)'}}}}
   });
 
   const toolCounts = countBy(tools);
   const topTools   = topN(toolCounts,6);
   destroyChart('tool');
   charts.tool = new Chart(document.getElementById('toolChart'),{
-    type:'bar',
-    data:{labels:topTools.map(([t])=>t.length>12?t.slice(0,11)+'…':t),
-      datasets:[{data:topTools.map(([,c])=>c),backgroundColor:'#534AB7',borderRadius:4,borderSkipped:false}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' uses'}}},
-      scales:{x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
+    type:'bar', data:{labels:topTools.map(([t])=>t.length>12?t.slice(0,11)+'…':t), datasets:[{data:topTools.map(([,c])=>c), backgroundColor:'#534AB7', borderRadius:4}]},
+    options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{stepSize:1}, grid:{color:'rgba(0,0,0,0.04)'}}, y:{grid:{display:false}}}}
   });
 
   const countryCounts = countBy(countries);
   const topCountries  = topN(countryCounts,6);
   destroyChart('country');
   charts.country = new Chart(document.getElementById('countryChart'),{
-    type:'bar',
-    data:{labels:topCountries.map(([c])=>c.length>14?c.slice(0,13)+'…':c),
-      datasets:[{data:topCountries.map(([,n])=>n),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' volunteers'}}},
-      scales:{x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
+    type:'bar', data:{labels:topCountries.map(([c])=>c.length>14?c.slice(0,13)+'…':c), datasets:[{data:topCountries.map(([,n])=>n), backgroundColor:'#1D9E75', borderRadius:4}]},
+    options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{stepSize:1}, grid:{color:'rgba(0,0,0,0.04)'}}, y:{grid:{display:false}}}}
   });
 
-  // First-time chart
-  const ftYes=firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
-  const ftNo=firstTime.length-ftYes;
+  const ftNo = firstTime.length-firstTimers;
   destroyChart('firstTime');
   charts.firstTime = new Chart(document.getElementById('firstTimeChart'),{
-    type:'doughnut',
-    data:{labels:['First time','Returning'],datasets:[{data:[ftYes,ftNo],backgroundColor:['#1D9E75','#D3D1C7'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12,boxWidth:10}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/firstTime.length*100)}%)`}}}}
+    type:'doughnut', data:{labels:['First time','Returning'], datasets:[{data:[firstTimers,ftNo], backgroundColor:['#1D9E75','#D3D1C7'], borderWidth:2, borderColor:'#fff'}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:11}, padding:12, boxWidth:10}}}}
   });
 
-  // Volunteer feedback
-  renderFeedback(rows3);
-  renderInlineFeedback(rows3);
-
   // Insights calculation
-  const largestOrg = orgs.reduce((a,b)=>a.hours>b.hours?a:b);
+  const largestOrg = activeOrgs.reduce((a,b)=>a.hours>b.hours?a:b);
   const largestPct = Math.round(largestOrg.hours/totalHours*100);
-  const completedSurveys = orgs.filter(o=>o.sat.length>0).length;
-  const topTool  = topN(toolCounts,1)[0];
-  const topSkill = topN(skillCounts,1)[0];
-
+  const completedSurveys = activeOrgs.filter(o=>o.sat.length>0).length;
+  
   document.getElementById('insight-row').innerHTML = `
     <div class="insight-card"><div class="insight-num">${uniqueCountries}</div><div class="insight-label">Countries represented across our volunteer community</div></div>
     <div class="insight-card"><div class="insight-num">${firstTimePct}%</div><div class="insight-label">Of volunteers are participating in Data ChangeMakers for the first time</div></div>
     <div class="insight-card"><div class="insight-num">${largestPct}%</div><div class="insight-label">Of all hours were delivered to ${largestOrg.name} — the flagship project</div></div>
     <div class="insight-card"><div class="insight-num">${avgSat?avgSat.toFixed(1)+'/5':'—'}</div><div class="insight-label">Average satisfaction across ${completedSurveys} post-project surveys</div></div>
   `;
-
-  const topToolStr  = topTool  ? ` The most used tool is ${topTool[0]}.` : '';
-  const topSkillStr = topSkill ? ` Most volunteers self-identify as ${topSkill[0].toLowerCase()} level.` : '';
-  document.getElementById('callout-text').textContent =
-    `Volunteers span ${uniqueCountries} countries and ${uniqueCities} cities, reflecting a truly global community.${topSkillStr}${topToolStr} ${completedSurveys} of ${orgs.length} organisations have completed post-project surveys — collecting these consistently will strengthen future impact reporting.`;
+  document.getElementById('callout-text').textContent = `Volunteers span ${uniqueCountries} countries and ${uniqueCities} cities. ${completedSurveys} of ${activeOrgs.length} organisations have completed post-project surveys — collecting these consistently will strengthen future impact reporting.`;
 }
 
-window.onload = function() {
-  loadAll();
-};
+async function loadAll() {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('refresh-label');
+  dot.classList.remove('live');
+  lbl.textContent = 'Loading...';
+  document.getElementById('error-area').innerHTML = '';
+  document.getElementById('loading-area').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+  try {
+    const [rows1, rows2, rows3] = await Promise.all([
+      fetchSheet(SHEET1_ID, SHEET1_TAB),
+      fetchSheet(SHEET2_ID, SHEET2_TAB),
+      fetchSheet(SHEET3_ID, SHEET3_TAB)
+    ]);
+    
+    renderDashboard(rows1, rows2, rows3);
+
+    dot.classList.add('live');
+    lbl.textContent = 'Refresh data';
+    document.getElementById('last-updated').textContent = new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
+    document.getElementById('loading-area').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+  } catch(err) {
+    document.getElementById('loading-area').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('error-area').innerHTML = `<div class="error-box">Could not load live data: <strong>${err.message}</strong></div>`;
+    lbl.textContent = 'Retry';
+  }
+}
+
+// Start application
+window.onload = loadAll;
 </script>
 </body>
 </html>
