@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Data ChangeMakers — Impact Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,11 +57,20 @@
   .impact-legend { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
 
-  .quotes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-  .quote-card { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1rem 1.25rem; }
+  /* Testimonials carousel styles */
+  .carousel-wrapper { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; padding: 1.25rem 1.5rem; position: relative; margin-bottom: 1.5rem; }
+  .carousel-container { position: relative; width: 100%; overflow: hidden; }
+  .carousel-slide { position: absolute; top: 0; left: 0; width: 100%; opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none; }
+  .carousel-slide.active { position: relative; opacity: 1; transform: translateY(0); pointer-events: auto; }
   .quote-mark { font-size: 28px; line-height: 1; color: #1d9e75; font-weight: 500; margin-bottom: 4px; }
-  .quote-text { font-size: 12px; color: #2c2c2a; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
-  .quote-org  { font-size: 11px; color: #b4b2a9; font-weight: 500; }
+  .quote-text { font-size: 13px; color: #2c2c2a; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
+  .quote-org  { font-size: 11px; color: #b4b2a9; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .carousel-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; border-top: 0.5px solid #f1efe8; padding-top: 10px; }
+  .carousel-dots { display: flex; gap: 6px; }
+  .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: #d3d1c7; cursor: pointer; transition: background 0.3s; }
+  .carousel-dot.active { background: #1d9e75; }
+  .carousel-btn { background: transparent; border: none; color: #888780; cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
+  .carousel-btn:hover { background: #f1efe8; color: #1a1a18; }
 
   .table-wrap { background: #fff; border: 0.5px solid #e0deda; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; overflow-x: auto; }
   .projects-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
@@ -76,7 +83,8 @@
   .badge-edu { background: #faeeda; color: #854f0b; }
   .badge-health { background: #faece7; color: #993c1d; }
 
-  .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  /* 4-column responsive volunteer chart row styles */
+  .vol-charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
   .vol-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
 
   .insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
@@ -86,6 +94,10 @@
   .callout { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; }
   .callout-text { font-size: 13px; color: #085041; line-height: 1.6; }
   .footer { font-size: 11px; color: #b4b2a9; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid #e0deda; }
+
+  @media (max-width: 900px) and (min-width: 701px) {
+    .vol-charts-row { grid-template-columns: 1fr 1fr; }
+  }
 
   @media (max-width: 700px) {
     .charts-row, .vol-charts-row, .quotes-grid, .insight-row { grid-template-columns: 1fr; }
@@ -104,10 +116,19 @@
         <p id="subtitle">Impact dashboard — loading...</p>
       </div>
     </div>
-    <button class="refresh-btn" onclick="loadAll()">
-      <span class="status-dot" id="status-dot"></span>
-      <span id="refresh-label">Refresh data</span>
-    </button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <!-- Year Filter Dropdown -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:12px;color:#888780;">Year:</span>
+        <select id="year-filter" onchange="filterByYear()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
+          <option value="all">All years</option>
+        </select>
+      </div>
+      <button class="refresh-btn" onclick="loadAll()">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="refresh-label">Refresh data</span>
+      </button>
+    </div>
   </div>
 
   <div id="error-area"></div>
@@ -173,14 +194,23 @@
     </div>
 
     <div class="section-label">What our partners say</div>
-    <div class="quotes-grid" id="quotes-grid"></div>
+    <div id="quotes-carousel-wrapper"></div>
 
-    <div class="section-label">Organisation overview</div>
+    <!-- Organisation Overview with dynamic Project Type filter -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="section-label" style="margin-bottom:0;">Organisation overview</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:12px;color:#888780;">Project Type:</span>
+        <select id="type-filter" onchange="filterTableByType()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;font-family:inherit;cursor:pointer;outline:none;">
+          <option value="all">All types</option>
+        </select>
+      </div>
+    </div>
     <div class="table-wrap">
       <table class="projects-table">
         <thead>
           <tr>
-            <th>Organisation</th><th>Project type</th><th>Volunteers</th><th>Total hours</th><th>Students</th>
+            <th>Organisation</th><th>Project type</th><th>Total hours</th>
           </tr>
         </thead>
         <tbody id="proj-tbody"></tbody>
@@ -190,6 +220,7 @@
     <div class="section-label">Our volunteers</div>
     <div class="vol-stat-row" id="vol-stat-row"></div>
 
+    <!-- Grouped Volunteer Chart Row -->
     <div class="vol-charts-row">
       <div class="chart-card">
         <div class="chart-title">Data skill level</div>
@@ -206,25 +237,15 @@
         <div class="chart-sub">volunteer locations</div>
         <div style="position:relative;width:100%;height:200px;"><canvas id="countryChart"></canvas></div>
       </div>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card" style="padding:0;overflow:hidden;">
-        <div style="padding:1rem 1.25rem 0.5rem;">
-          <div class="chart-title">Volunteer locations</div>
-          <div class="chart-sub">cities where our volunteers are based — <span id="cities-map-count"></span></div>
-        </div>
-        <div id="cities-map" style="height:240px;width:100%;"></div>
-      </div>
       <div class="chart-card">
         <div class="chart-title">First-time participants</div>
         <div class="chart-sub">new vs returning volunteers</div>
-        <div style="position:relative;width:100%;height:180px;"><canvas id="firstTimeChart"></canvas></div>
+        <div style="position:relative;width:100%;height:200px;"><canvas id="firstTimeChart"></canvas></div>
       </div>
     </div>
 
     <div class="section-label">Volunteer feedback — what they enjoyed</div>
-    <div id="fb-enjoyed-only" style="margin-bottom:1.5rem;"></div>
+    <div id="fb-enjoyed-carousel-wrapper"></div>
 
     <div class="section-label">Insights</div>
     <div class="insight-row" id="insight-row"></div>
@@ -236,7 +257,6 @@
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────────────────────
-const API_KEY    = 'AIzaSyAtOXeiYk4A9KwEnj4LY3VB_ypJ8O69DlQ';
 const SHEET1_ID  = '1bDquzEfAkV959pBQXG1zofloY5ZTEFQZaSfJSdS7StA';
 const SHEET1_TAB = 'Project Impact';
 const SHEET2_ID  = '14jOgDE-a7-I7Rns9zERGTcA2ounblIdli2b5v-sWYSg';
@@ -246,16 +266,16 @@ const SHEET3_TAB = 'Feedback';
 
 // Sheet 1 column indices (1-based)
 const COL = {
-  CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6, STUDENTS:12, GRAND_TOTAL:14,
-  // Pre (green) / Post (purple) pairs
-  PRE_DATA:15,      POST_DATA:16,
-  PRE_LITERACY:17,  POST_LITERACY:18,
-  PRE_TOOLS:19,     POST_TOOLS:20,
-  PRE_IMPACT:21,    POST_IMPACT:22,
-  PRE_DECISIONS:23, POST_DECISIONS:24,
+  DATE:2, CHARITY:3, TYPE:4, VOLS_PROJECT:5, HOURS_PROJECT:6, STUDENTS:12, GRAND_TOTAL:15,
+  // Pre (green) / Post (purple) pairs - shifted by 1 to align with Grand Total being Col 15
+  PRE_DATA:16,      POST_DATA:17,
+  PRE_LITERACY:18,  POST_LITERACY:19,
+  PRE_TOOLS:20,     POST_TOOLS:21,
+  PRE_IMPACT:22,    POST_IMPACT:23,
+  PRE_DECISIONS:24, POST_DECISIONS:25,
   // Satisfaction-only cols (no pre)
-  SAT_DCM:27, SAT_PARTNER:28, SAT_PROGRAMS:30, SAT_MEASURE:31, SAT_OVERALL:33,
-  LIKELY_RECOMMEND:34, QUOTES:35,
+  SAT_DCM:28, SAT_PARTNER:29, SAT_PROGRAMS:31, SAT_MEASURE:32, SAT_OVERALL:34,
+  LIKELY_RECOMMEND:35, QUOTES:36,
 };
 
 // Sheet 3 (volunteer feedback) col indices
@@ -284,6 +304,22 @@ const SAT_QUESTIONS = [
 
 let charts = {};
 
+// Cache for raw loaded sheet data to support local filtering
+let rawRows1 = null;
+let rawRows2 = null;
+let rawRows3 = null;
+
+// Stores filtered list of parsed organisations for localized filter operations
+let activeOrgs = [];
+
+// Rotating partner quote carousel variables
+let partnerQuoteActiveIndex = 0;
+let partnerQuoteRotateInterval = null;
+
+// Rotating volunteer quote carousel variables
+let volQuoteActiveIndex = 0;
+let volQuoteRotateInterval = null;
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function v(row, col) { const val = row[col-1]; return val !== undefined ? String(val).trim() : ''; }
 function n(row, col) { const val = parseFloat(v(row,col).replace(/[$,]/g,'')); return isNaN(val) ? null : val; }
@@ -293,14 +329,43 @@ function countBy(arr){ return arr.reduce((acc,val)=>{ if(!val||val==='') return 
 function topN(obj,n) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
 function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
 
-function sheetURL(id, tab) {
-  return `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
+function getYearFromValue(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  const match = s.match(/\b(20\d{2})\b/);
+  if (match) return parseInt(match[1]);
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear();
+  return null;
 }
-async function fetchSheet(id, tab, skip=1) {
-  const res = await fetch(sheetURL(id, tab));
-  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message||'Fetch failed'); }
-  const json = await res.json();
-  return (json.values||[]).slice(skip).filter(r=>r.some(c=>String(c).trim()!==''));
+
+async function fetchSheet(id, tab, skip=0) {
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Network failure querying sheet: ${tab}`);
+  const text = await response.text();
+  
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if (!match) throw new Error(`Format validation error parsing sheet: ${tab}`);
+  
+  const json = JSON.parse(match[1]);
+  if (json.status === 'error') {
+    throw new Error(json.errors[0]?.detailed_message || `Authority execution error reading: ${tab}`);
+  }
+  
+  const table = json.table;
+  let rawRows = table.rows.map(r => {
+    return r.c.map(cell => {
+      if (!cell) return '';
+      return cell.v !== null && cell.v !== undefined ? cell.v : '';
+    });
+  });
+  
+  if (skip > 0) {
+    rawRows = rawRows.slice(skip);
+  }
+  
+  return rawRows.filter(r => r.some(c => String(c).trim() !== ''));
 }
 
 function starHtml(val, color) {
@@ -308,71 +373,107 @@ function starHtml(val, color) {
   return Array.from({length:5},(_,i)=>`<span style="color:${i<f?color:'#d3d1c7'};font-size:16px;">★</span>`).join('');
 }
 
-// ── Geo ────────────────────────────────────────────────────────────────────────
-const CITY_GEO = {
-  'sydney':[-33.86,151.20],'melbourne':[-37.81,144.96],'brisbane':[-27.47,153.02],'perth':[-31.95,115.86],
-  'adelaide':[-34.92,138.60],'auckland':[-36.84,174.76],'london':[51.50,-0.12],'manchester':[53.48,-2.24],
-  'birmingham':[52.48,-1.89],'edinburgh':[55.95,-3.18],'dublin':[53.33,-6.24],'new york city':[40.71,-74.00],
-  'new york':[40.71,-74.00],'los angeles':[34.05,-118.24],'chicago':[41.87,-87.62],'san francisco':[37.77,-122.41],
-  'seattle':[47.60,-122.33],'boston':[42.36,-71.05],'toronto':[43.65,-79.38],'vancouver':[49.24,-123.11],
-  'montreal':[45.50,-73.56],'ottawa':[45.42,-75.69],'bangalore':[12.97,77.59],'mumbai':[19.07,72.87],
-  'delhi':[28.61,77.20],'hyderabad':[17.38,78.48],'chennai':[13.08,80.27],'pune':[18.52,73.85],
-  'berlin':[52.52,13.40],'munich':[48.13,11.57],'hamburg':[53.55,9.99],'paris':[48.85,2.35],
-  'amsterdam':[52.37,4.89],'barcelona':[41.38,2.15],'madrid':[40.41,-3.70],'rome':[41.89,12.48],
-  'milan':[45.46,9.18],'zurich':[47.37,8.54],'brussels':[50.85,4.35],'stockholm':[59.33,18.06],
-  'oslo':[59.91,10.75],'copenhagen':[55.67,12.56],'helsinki':[60.16,24.93],'singapore':[1.35,103.81],
-  'tokyo':[35.68,139.69],'seoul':[37.56,126.97],'beijing':[39.90,116.40],'shanghai':[31.22,121.47],
-  'hong kong':[22.31,114.17],'nairobi':[-1.28,36.81],'cape town':[-33.92,18.42],'johannesburg':[-26.20,28.04],
-  'karachi':[24.86,67.01],'lahore':[31.55,74.34],'dhaka':[23.81,90.41],'colombo':[6.92,79.84],
-  'jakarta':[-6.21,106.84],'kuala lumpur':[3.14,101.68],'manila':[14.59,120.97],'bangkok':[13.75,100.52],
-  'buenos aires':[-34.60,-58.38],'sao paulo':[-23.54,-46.62],'bogota':[4.71,-74.07],
-  'mexico city':[19.42,-99.13],'ruston':[32.52,-92.63],'carmel':[36.55,-121.92],
-  'maidenhead':[51.52,-0.72],'norwich':[52.63,1.30],'arlington':[32.73,-97.10],
-  'vijayanagara':[15.34,76.46],'vijayanagara, karnataka':[15.34,76.46],
-};
+// ── Year dropdown populator ───────────────────────────────────────────────────
+function populateYearFilter(rows) {
+  const select = document.getElementById('year-filter');
+  if (!select) return;
+  const currentSelection = select.value || 'all';
 
-let citiesMap = null, citiesMarkerLayer = null;
-
-function renderCitiesMap(topCities) {
-  const el = document.getElementById('cities-map');
-  if (!el || typeof L === 'undefined') return;
-  if (!citiesMap) {
-    citiesMap = L.map('cities-map',{zoomControl:true,scrollWheelZoom:false}).setView([20,10],2);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}).addTo(citiesMap);
-    citiesMarkerLayer = L.layerGroup().addTo(citiesMap);
-  }
-  citiesMarkerLayer.clearLayers();
-  const plotted = [];
-  topCities.forEach(([city,count,data])=>{
-    const coords = CITY_GEO[city.toLowerCase()];
-    if (!coords) return;
-    const sz = Math.min(8+count*4,28);
-    const icon = L.divIcon({
-      className:'',
-      html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:#1D9E75;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${count>1?9:0}px;font-weight:700;">${count>1?count:''}</div>`,
-      iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],
-    });
-    const volHtml = data ? Object.entries(data.volunteers).sort((a,b)=>b[1]-a[1]).map(([name,subs])=>
-      `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px;">
-        <span>${name}</span><span style="color:#1D9E75;font-weight:700;margin-left:12px;">${subs} sub${subs>1?'s':''}</span>
-      </div>`).join('') : '';
-    const popup = `<div style="font-family:sans-serif;min-width:180px;">
-      <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${city}</div>
-      ${data?.country?`<div style="font-size:11px;color:#888;margin-bottom:8px;">${data.country}</div>`:''}
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b4b2a9;margin-bottom:6px;">${count} volunteer${count>1?'s':''}</div>
-      ${volHtml}
-    </div>`;
-    L.marker(coords,{icon}).bindPopup(popup,{maxWidth:240}).addTo(citiesMarkerLayer);
-    plotted.push(coords);
+  const years = new Set();
+  rows.forEach(row => {
+    const dVal = v(row, COL.DATE);
+    const yr = getYearFromValue(dVal);
+    if (yr) years.add(yr);
   });
-  document.getElementById('cities-map-count').textContent = `${plotted.length} cities mapped`;
-  setTimeout(()=>{
-    citiesMap.invalidateSize();
-    if (plotted.length>0) citiesMap.fitBounds(L.latLngBounds(plotted),{padding:[20,20],maxZoom:4});
-  },200);
+
+  const sortedYears = Array.from(years).sort((a,b)=> b - a);
+  select.innerHTML = '<option value="all">All years</option>';
+  sortedYears.forEach(y => {
+    select.innerHTML += `<option value="${y}">${y}</option>`;
+  });
+
+  if (years.has(parseInt(currentSelection))) {
+    select.value = currentSelection;
+  } else {
+    select.value = 'all';
+  }
 }
 
-// ── Data loading ───────────────────────────────────────────────────────────────
+// ── Project Type dropdown populator ───────────────────────────────────────────
+function populateTypeFilter(orgsList) {
+  const select = document.getElementById('type-filter');
+  if (!select) return;
+  const currentSelection = select.value || 'all';
+
+  const types = new Set();
+  orgsList.forEach(o => {
+    const {label} = getTypeInfo(o.types);
+    if (label && label !== '—') types.add(label);
+  });
+
+  const sortedTypes = Array.from(types).sort();
+  select.innerHTML = '<option value="all">All types</option>';
+  sortedTypes.forEach(t => {
+    select.innerHTML += `<option value="${t}">${t}</option>`;
+  });
+
+  if (types.has(currentSelection)) {
+    select.value = currentSelection;
+  } else {
+    select.value = 'all';
+  }
+}
+
+// ── Render table rows with local filter mapping ──────────────────────────────
+function renderTableRows() {
+  const select = document.getElementById('type-filter');
+  const currentType = select ? select.value : 'all';
+  const tbody = document.getElementById('proj-tbody');
+  if (!tbody) return;
+
+  const filtered = currentType === 'all' 
+    ? activeOrgs 
+    : activeOrgs.filter(o => getTypeInfo(o.types).label === currentType);
+
+  tbody.innerHTML = filtered.map(o=>{
+    const {label,badge}=getTypeInfo(o.types);
+    return `<tr>
+      <td style="font-weight:500;">${o.name}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td>${Math.round(o.hours).toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTableByType() {
+  renderTableRows();
+}
+
+// ── Apply year selection and render dashboard locally ───────────────────────
+function applyFiltersAndRender() {
+  if (!rawRows1 || !rawRows2 || !rawRows3) return;
+
+  const select = document.getElementById('year-filter');
+  const selectedYear = select ? select.value : 'all';
+
+  let filteredRows1 = rawRows1;
+  if (selectedYear !== 'all') {
+    const targetYear = parseInt(selectedYear);
+    filteredRows1 = rawRows1.filter(row => {
+      const dVal = v(row, COL.DATE);
+      return getYearFromValue(dVal) === targetYear;
+    });
+  }
+
+  renderDashboard(filteredRows1, rawRows2, rawRows3);
+}
+
+// Global year filter trigger
+function filterByYear() {
+  applyFiltersAndRender();
+}
+
+// ── Data loading process ───────────────────────────────────────────────────────
 async function loadAll() {
   const dot = document.getElementById('status-dot');
   const lbl = document.getElementById('refresh-label');
@@ -383,11 +484,17 @@ async function loadAll() {
   document.getElementById('dashboard').style.display = 'none';
   try {
     const [rows1,rows2,rows3] = await Promise.all([
-      fetchSheet(SHEET1_ID,SHEET1_TAB,1),
-      fetchSheet(SHEET2_ID,SHEET2_TAB,1),
-      fetchSheet(SHEET3_ID,SHEET3_TAB,1),
+      fetchSheet(SHEET1_ID,SHEET1_TAB,0),
+      fetchSheet(SHEET2_ID,SHEET2_TAB,0),
+      fetchSheet(SHEET3_ID,SHEET3_TAB,0),
     ]);
-    renderDashboard(rows1,rows2,rows3);
+    rawRows1 = rows1;
+    rawRows2 = rows2;
+    rawRows3 = rows3;
+
+    populateYearFilter(rawRows1);
+    applyFiltersAndRender();
+
     dot.classList.add('live');
     lbl.textContent = 'Refresh data';
     document.getElementById('last-updated').textContent = new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
@@ -397,7 +504,7 @@ async function loadAll() {
     document.getElementById('loading-area').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('error-area').innerHTML =
-      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>Make sure both sheets are shared as "Anyone with the link can view".</div>`;
+      `<div class="error-box">Could not load live data: <strong>${err.message}</strong><br>Make sure all sheets are shared as "Anyone with the link can view".</div>`;
     lbl.textContent = 'Retry';
   }
 }
@@ -407,7 +514,7 @@ function mergeOrgs(rows) {
   return rows.map(row=>{
     const raw = v(row,COL.CHARITY).replace(/[Cc]ollorado/g,'Colorado').trim();
     const type = v(row,COL.TYPE).toLowerCase();
-    const rowHours = n(row,COL.GRAND_TOTAL)||n(row,COL.HOURS_PROJECT)||0;
+    const rowHours = n(row,COL.GRAND_TOTAL) !== null ? n(row,COL.GRAND_TOTAL) : (n(row,COL.HOURS_PROJECT)||0);
     const sat = n(row,COL.SAT_OVERALL);
     const q   = v(row,COL.QUOTES);
     const isViz = type.includes('visuali');
@@ -434,7 +541,7 @@ function getTypeInfo(types) {
   return {label:t||'—',badge:'badge-viz'};
 }
 
-// ── Panel toggle functions ─────────────────────────────────────────────────────
+// ── Panel toggles ──────────────────────────────────────────────────────────────
 function setSurveyPanel(panel, btn) {
   document.querySelectorAll('#stab-org,#stab-vol').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
@@ -450,7 +557,206 @@ function setOrgTab(tab, btn) {
   document.getElementById('org-panel-sat').style.display     = tab==='sat'?'block':'none';
 }
 
-// ── Render pre/post pairs ──────────────────────────────────────────────────────
+// ── Partner Quotes Carousel Logic ──
+function startPartnerQuoteTimer() {
+  stopPartnerQuoteTimer();
+  partnerQuoteRotateInterval = setInterval(() => {
+    navigatePartnerQuote(1);
+  }, 5500);
+}
+
+function stopPartnerQuoteTimer() {
+  if (partnerQuoteRotateInterval) {
+    clearInterval(partnerQuoteRotateInterval);
+    partnerQuoteRotateInterval = null;
+  }
+}
+
+// Partner quote rendering and rotation
+function showPartnerQuote(index) {
+  const slides = document.querySelectorAll('.partner-carousel-slide');
+  const dots = document.querySelectorAll('.partner-carousel-dot');
+  if (!slides.length) return;
+
+  partnerQuoteActiveIndex = (index + slides.length) % slides.length;
+
+  slides.forEach((slide, idx) => {
+    if (idx === partnerQuoteActiveIndex) {
+      slide.classList.add('active');
+    } else {
+      slide.classList.remove('active');
+    }
+  });
+
+  dots.forEach((dot, idx) => {
+    if (idx === partnerQuoteActiveIndex) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+  });
+}
+
+function navigatePartnerQuote(direction) {
+  showPartnerQuote(partnerQuoteActiveIndex + direction);
+}
+
+function renderQuotesCarousel(quotes) {
+  const container = document.getElementById('quotes-carousel-wrapper');
+  if (!container) return;
+  
+  if (!quotes || !quotes.length) {
+    container.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No testimonials available yet.</div>';
+    return;
+  }
+
+  partnerQuoteActiveIndex = 0;
+
+  const slidesHtml = quotes.map((q, idx) => {
+    const sentences = q.text.split(/[.!?][""]?\s+/);
+    const display   = sentences[0].length > 30 ? sentences[0] : sentences.slice(0,2).join('. ');
+    const clean     = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
+    const finalTxt  = clean + (clean.endsWith('.') ? '' : '.');
+    const activeClass = idx === 0 ? 'active' : '';
+
+    return `
+      <div class="carousel-slide partner-carousel-slide ${activeClass}">
+        <div class="quote-mark">"</div>
+        <div class="quote-text">${finalTxt}</div>
+        <div class="quote-org">${q.org}</div>
+      </div>
+    `;
+  }).join('');
+
+  const dotsHtml = quotes.map((_, idx) => {
+    const activeClass = idx === 0 ? 'active' : '';
+    return `<span class="carousel-dot partner-carousel-dot ${activeClass}" onclick="showPartnerQuote(${idx}); startPartnerQuoteTimer();"></span>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="carousel-wrapper" onmouseenter="stopPartnerQuoteTimer()" onmouseleave="startPartnerQuoteTimer()">
+      <div class="carousel-container">
+        ${slidesHtml}
+      </div>
+      <div class="carousel-controls">
+        <button class="carousel-btn" onclick="navigatePartnerQuote(-1); startPartnerQuoteTimer();" title="Previous Testimonial">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="carousel-dots">
+          ${dotsHtml}
+        </div>
+        <button class="carousel-btn" onclick="navigatePartnerQuote(1); startPartnerQuoteTimer();" title="Next Testimonial">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+
+  startPartnerQuoteTimer();
+}
+
+// ── Volunteer Quotes Carousel Logic ──
+function startVolQuoteTimer() {
+  stopVolQuoteTimer();
+  volQuoteRotateInterval = setInterval(() => {
+    navigateVolQuote(1);
+  }, 6000);
+}
+
+function stopVolQuoteTimer() {
+  if (volQuoteRotateInterval) {
+    clearInterval(volQuoteRotateInterval);
+    volQuoteRotateInterval = null;
+  }
+}
+
+function showVolQuote(index) {
+  const slides = document.querySelectorAll('.vol-carousel-slide');
+  const dots = document.querySelectorAll('.vol-carousel-dot');
+  if (!slides.length) return;
+
+  volQuoteActiveIndex = (index + slides.length) % slides.length;
+
+  slides.forEach((slide, idx) => {
+    if (idx === volQuoteActiveIndex) {
+      slide.classList.add('active');
+    } else {
+      slide.classList.remove('active');
+    }
+  });
+
+  dots.forEach((dot, idx) => {
+    if (idx === volQuoteActiveIndex) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+  });
+}
+
+function navigateVolQuote(direction) {
+  showVolQuote(volQuoteActiveIndex + direction);
+}
+
+function renderFeedback(rows3) {
+  const fbRows = (rows3 || []).filter(r => v(r, FB.OVERALL));
+  const el = document.getElementById('fb-enjoyed-carousel-wrapper');
+  if (!el) return;
+
+  if (!fbRows.length) {
+    el.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No volunteer feedback available yet.</div>';
+    return;
+  }
+
+  // Grab rich responses, order from latest to oldest
+  const enjoyed = fbRows.map(r => v(r, FB.ENJOYED)).filter(t => t.length > 15).reverse();
+  if (!enjoyed.length) {
+    el.innerHTML = '<div class="carousel-wrapper" style="color:#888780;font-size:12px;text-align:center;">No detailed feedback comments yet.</div>';
+    return;
+  }
+
+  // Support up to 10 feedback rotating cards
+  const maxQuotes = enjoyed.slice(0, 10);
+  volQuoteActiveIndex = 0;
+
+  const slidesHtml = maxQuotes.map((txt, idx) => {
+    const activeClass = idx === 0 ? 'active' : '';
+    return `
+      <div class="carousel-slide vol-carousel-slide ${activeClass}">
+        <div class="quote-mark">"</div>
+        <div class="quote-text">${txt}</div>
+        <div class="quote-org">Volunteer community response</div>
+      </div>
+    `;
+  }).join('');
+
+  const dotsHtml = maxQuotes.map((_, idx) => {
+    const activeClass = idx === 0 ? 'active' : '';
+    return `<span class="carousel-dot vol-carousel-dot ${activeClass}" onclick="showVolQuote(${idx}); startVolQuoteTimer();"></span>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="carousel-wrapper" onmouseenter="stopVolQuoteTimer()" onmouseleave="startVolQuoteTimer()">
+      <div class="carousel-container">
+        ${slidesHtml}
+      </div>
+      <div class="carousel-controls">
+        <button class="carousel-btn" onclick="navigateVolQuote(-1); startVolQuoteTimer();" title="Previous Feedback">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="carousel-dots">
+          ${dotsHtml}
+        </div>
+        <button class="carousel-btn" onclick="navigateVolQuote(1); startVolQuoteTimer();" title="Next Feedback">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+
+  startVolQuoteTimer();
+}
+
 function renderImpactPairs(orgs) {
   const el = document.getElementById('impact-pairs');
   if (!el) return;
@@ -471,7 +777,7 @@ function renderImpactPairs(orgs) {
     } else {
       const sign  = delta>0?'+':delta<0?'':' ';
       const cls   = delta>0?'delta-up':delta<0?'delta-dn':'delta-eq';
-      const arrow = delta>0?'↑':delta<0?'↓':'→';
+      const arrow = delta>0?'↑':delta<0?'↓':'';
       pillHtml = `<span class="delta-pill ${cls}">${arrow} ${sign}${fmt(delta)}</span>`;
     }
     return `<div class="impact-pair">
@@ -486,7 +792,6 @@ function renderImpactPairs(orgs) {
   }).join('');
 }
 
-// ── Render satisfaction ratings ────────────────────────────────────────────────
 function renderSatisfactionRatings(orgs) {
   const el = document.getElementById('sat-ratings');
   if (!el) return;
@@ -512,7 +817,6 @@ function renderSatisfactionRatings(orgs) {
     }).join('');
 }
 
-// ── Render volunteer feedback ──────────────────────────────────────────────────
 function renderInlineFeedback(rows3) {
   const fbRows = (rows3||[]).filter(r=>v(r,FB.OVERALL));
   const el = document.getElementById('inline-fb-ratings');
@@ -538,24 +842,9 @@ function renderInlineFeedback(rows3) {
     }).join('');
 }
 
-function renderFeedback(rows3) {
-  const fbRows=(rows3||[]).filter(r=>v(r,FB.OVERALL));
-  const el=document.getElementById('fb-enjoyed-only');
-  if(!el) return;
-  if(!fbRows.length){el.innerHTML='<div style="font-size:13px;color:#b4b2a9;">No feedback data yet.</div>';return;}
-  const enjoyed=fbRows.map(r=>v(r,FB.ENJOYED)).filter(t=>t.length>15).slice(-4).reverse();
-  el.innerHTML=`<div class="quotes-grid">${
-    enjoyed.map(t=>`<div class="quote-card"><div class="quote-mark">"</div><div class="quote-text">${t}</div></div>`).join('')
-  }</div>`;
-}
-
-// ── Main render ────────────────────────────────────────────────────────────────
 function renderDashboard(rows1, rows2, rows3) {
   const orgs = mergeOrgs(rows1.filter(r=>v(r,COL.CHARITY).length>1));
   const uniqueOrgCount = new Set(orgs.map(o=>o.name.replace(/\s*\(.*?\)/g,'').trim().toLowerCase())).size;
-
-  document.getElementById('subtitle').textContent =
-    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${rows2.length} volunteer submissions`;
 
   const totalHours    = orgs.reduce((s,o)=>s+o.hours,0);
   const totalVols     = orgs.reduce((s,o)=>s+o.vols,0);
@@ -563,11 +852,15 @@ function renderDashboard(rows1, rows2, rows3) {
   const avgSat        = avg(allSat);
   const avgHrsPerProj = orgs.length ? Math.round(totalHours/orgs.length) : 0;
 
+  // Set the top banner subtitles to display dynamic totals
+  document.getElementById('subtitle').textContent =
+    `Impact dashboard — ${uniqueOrgCount} organisations · ${orgs.length} projects · ${totalVols} volunteers`;
+
   const fbRows        = (rows3||[]).filter(r=>v(r,FB.OVERALL));
   const fbOverallVals = fbRows.map(r=>n(r,FB.OVERALL)).filter(x=>x>0);
   const volOverallAvg = fbOverallVals.length ? avg(fbOverallVals) : null;
 
-  // Key metrics
+  // Key numbers
   document.getElementById('metric-grid').innerHTML = `
     <div class="metric metric-accent">
       <div class="metric-label">Volunteer hours</div>
@@ -629,50 +922,51 @@ function renderDashboard(rows1, rows2, rows3) {
   renderImpactPairs(orgs);
   renderSatisfactionRatings(orgs);
 
-  // Quotes
-  const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20).slice(0,4);
-  document.getElementById('quotes-grid').innerHTML = allQuotes.map(q=>{
-    const sentences = q.text.split(/[.!?][""]?\s+/);
-    const display   = sentences[0].length>30 ? sentences[0] : sentences.slice(0,2).join('. ');
-    const clean     = display.replace(/^[""]/, '').replace(/[""]$/, '').trim();
-    return `<div class="quote-card">
-      <div class="quote-mark">"</div>
-      <div class="quote-text">${clean}${clean.endsWith('.')?'':'.'}</div>
-      <div class="quote-org">${q.org}</div>
-    </div>`;
-  }).join('');
+  // Render rotating partner quotes
+  const allQuotes = orgs.flatMap(o=>o.quotes).filter(q=>q.text.length>20);
+  renderQuotesCarousel(allQuotes);
 
-  // Org table
-  document.getElementById('proj-tbody').innerHTML = orgs.map(o=>{
-    const {label,badge}=getTypeInfo(o.types);
-    return `<tr>
-      <td style="font-weight:500;">${o.name}</td>
-      <td><span class="badge ${badge}">${label}</span></td>
-      <td>${o.vols||'—'}</td>
-      <td>${Math.round(o.hours).toLocaleString()}</td>
-      <td>${o.students||'—'}</td>
-    </tr>`;
-  }).join('');
+  // Save to active state and trigger the table rendering & filtering
+  activeOrgs = orgs;
+  populateTypeFilter(activeOrgs);
+  renderTableRows();
 
   // Volunteer section
   const volRows   = rows2.filter(r=>v(r,VOL.SKILL)||v(r,VOL.COUNTRY)||v(r,VOL.TOOL));
   const skills    = volRows.map(r=>v(r,VOL.SKILL)).filter(Boolean);
   const countries = volRows.map(r=>v(r,VOL.COUNTRY)).filter(Boolean);
-  const cities    = volRows.map(r=>v(r,VOL.CITY)).filter(Boolean);
   const tools     = volRows.flatMap(r=>v(r,VOL.TOOL).split(/[,;/]/).map(t=>t.trim())).filter(Boolean);
   const firstTime = volRows.map(r=>v(r,VOL.FIRST_TIME)).filter(Boolean);
   const uniqueCountries = new Set(countries).size;
-  const uniqueCities    = new Set(cities).size;
+  const uniqueCities    = new Set(volRows.map(r=>v(r,VOL.CITY)).filter(Boolean)).size;
   const firstTimers     = firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const firstTimePct    = firstTime.length ? Math.round(firstTimers/firstTime.length*100) : 0;
 
+  // Stat Grid updated: first card now displays totalVols
   document.getElementById('vol-stat-row').innerHTML = `
-    <div class="metric"><div class="metric-label">Submissions</div><div class="metric-value">${volRows.length}</div><div class="metric-sub">volunteer entries</div></div>
-    <div class="metric metric-accent"><div class="metric-label">Countries</div><div class="metric-value">${uniqueCountries}</div><div class="metric-sub">represented</div></div>
-    <div class="metric"><div class="metric-label">Cities</div><div class="metric-value">${uniqueCities}</div><div class="metric-sub">volunteer locations</div></div>
-    <div class="metric"><div class="metric-label">First-timers</div><div class="metric-value">${firstTimePct}%</div><div class="metric-sub">new to programme</div></div>
+    <div class="metric">
+      <div class="metric-label">Volunteers</div>
+      <div class="metric-value">${totalVols}</div>
+      <div class="metric-sub">volunteer entries</div>
+    </div>
+    <div class="metric metric-accent">
+      <div class="metric-label">Countries</div>
+      <div class="metric-value">${uniqueCountries}</div>
+      <div class="metric-sub">represented</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Cities</div>
+      <div class="metric-value">${uniqueCities}</div>
+      <div class="metric-sub">volunteer locations</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">First-timers</div>
+      <div class="metric-value">${firstTimePct}%</div>
+      <div class="metric-sub">new to programme</div>
+    </div>
   `;
 
+  // Charts
   const skillCounts = countBy(skills);
   const skillOrder  = ['Beginner','Intermediate','Advanced','Expert'];
   const skillLabels = skillOrder.filter(s=>skillCounts[s]);
@@ -712,20 +1006,6 @@ function renderDashboard(rows1, rows2, rows3) {
       scales:{x:{ticks:{font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}
   });
 
-  // Cities map
-  const cityVolMap = {};
-  volRows.forEach(r=>{
-    const city=v(r,VOL.CITY); if(!city) return;
-    const name=((r[4]||'')+' '+(r[5]||'')).trim()||'Volunteer';
-    const country=v(r,VOL.COUNTRY);
-    if(!cityVolMap[city]) cityVolMap[city]={country,volunteers:{}};
-    cityVolMap[city].volunteers[name]=(cityVolMap[city].volunteers[name]||0)+1;
-  });
-  const topCities = Object.entries(cityVolMap)
-    .map(([city,data])=>[city,Object.keys(data.volunteers).length,data])
-    .sort((a,b)=>b[1]-a[1]);
-  renderCitiesMap(topCities);
-
   // First-time chart
   const ftYes=firstTime.filter(f=>/yes|y|true|1/i.test(f)).length;
   const ftNo=firstTime.length-ftYes;
@@ -742,7 +1022,7 @@ function renderDashboard(rows1, rows2, rows3) {
   renderFeedback(rows3);
   renderInlineFeedback(rows3);
 
-  // Insights
+  // Insights calculation
   const largestOrg = orgs.reduce((a,b)=>a.hours>b.hours?a:b);
   const largestPct = Math.round(largestOrg.hours/totalHours*100);
   const completedSurveys = orgs.filter(o=>o.sat.length>0).length;
@@ -762,7 +1042,9 @@ function renderDashboard(rows1, rows2, rows3) {
     `Volunteers span ${uniqueCountries} countries and ${uniqueCities} cities, reflecting a truly global community.${topSkillStr}${topToolStr} ${completedSurveys} of ${orgs.length} organisations have completed post-project surveys — collecting these consistently will strengthen future impact reporting.`;
 }
 
-loadAll();
+window.onload = function() {
+  loadAll();
+};
 </script>
 </body>
 </html>
